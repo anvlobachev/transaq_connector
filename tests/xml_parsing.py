@@ -58,7 +58,7 @@ class TestClientOrders(ut.TestCase):
         self.assertEqual(o.client, 'test/C282166')
         self.assertEqual(o.status, 'active')
         self.assertEqual(o.buysell, 'S')
-        self.assertEqual(o.time, dt(2015,8,10,16,05,20))
+        self.assertEqual(o.time, dt(2015,8,10,16,5,20))
         self.assertEqual(o.broker_ref, '')
         self.assertEqual(o.accrued_int, 0.0)
         self.assertEqual(o.settle_code, 'Y2')
