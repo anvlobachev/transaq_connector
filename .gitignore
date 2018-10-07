@@ -3,6 +3,7 @@
 *.sublime*
 Logs/
 .idea/
+.vscode/
 pair/
 build/
 docs/build/
