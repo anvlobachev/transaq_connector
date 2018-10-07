@@ -3,7 +3,7 @@
 Пример использования коннектора.
 Смена пароля при первом подключении.
 """
-from commands import *
+from commands import uninitialize, initialize, connect, disconnect, change_pass
 import time
 
 

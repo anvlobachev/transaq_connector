@@ -2,7 +2,7 @@
 """
 Пример использования коннектора.
 """
-from commands import *
+from commands import initialize, connect, get_history, disconnect, uninitialize
 import time
 
 
