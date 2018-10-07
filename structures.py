@@ -6,7 +6,8 @@
 
 @author: Roma
 """
-from eulxml.xmlmap import *
+from eulxml.xmlmap import parseString, XmlObject, load_xmlobject_from_string, StringField, FloatField, \
+    DateTimeField, IntegerField, SimpleBooleanField, NodeListField, ItemField, IntegerListField, NodeField
 from eulxml.xmlmap.fields import Field, DateTimeMapper
 import sys, inspect, logging
 
@@ -54,7 +55,7 @@ class NullableDateTimeMapper(DateTimeMapper):
     def to_python(self, node):
         if node is None:
             return None
-        if isinstance(node, basestring):
+        if isinstance(node, (str, bytes)):
             rep = node
         else:
             rep = self.XPATH(node)
@@ -76,10 +77,11 @@ class MyXmlObject(XmlObject):
     def __repr__(self):
         cls = self.__class__
         fields = []
-        for (name, val) in filter(lambda (name, val): isinstance(val, Field), inspect.getmembers(cls)):
-            val = self.__getattribute__(name)
-            if val:
-                fields.append("%s=%s" % (name, unicode(val)))
+        for (name, val) in inspect.getmembers(cls):
+            if isinstance(val, Field):
+                val = self.__getattribute__(name)
+                if val:
+                    fields.append("%s=%s" % (name, val))
         return "%s(%s)" % (cls.__name__, ', '.join(fields))
 
 
