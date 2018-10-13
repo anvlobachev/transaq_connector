@@ -31,7 +31,7 @@ def parse(xml):
     # Корневой тег достанем
     root = parseString(xml).tag
     # Пройдемся по всем классам модуля и найдем подходящий
-    if not len(_my_classes):
+    if not _my_classes:
         _my_classes = filter(lambda o: inspect.isclass(o) and issubclass(o, MyXmlObject),
                              sys.modules[__name__].__dict__.values())
     for cls in _my_classes:
