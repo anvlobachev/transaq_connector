@@ -12,8 +12,8 @@ from datetime import datetime as dt
 class TestClientOrders(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/orders.xml').read()
-        cls.obj = ClientOrderPacket.parse(xml)
+        with open('tests/orders.xml') as xml:
+            cls.obj = ClientOrderPacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, ClientOrderPacket)
@@ -118,8 +118,8 @@ class TestClientOrders(ut.TestCase):
 class TestClientTrades(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/trades.xml').read()
-        cls.obj = ClientTradePacket.parse(xml)
+        with open('tests/trades.xml') as xml:
+            cls.obj = ClientTradePacket.parse(xml.read())
 
     def test_trade1(self):
         o = self.obj.items[0]
@@ -173,8 +173,8 @@ class TestClientTrades(ut.TestCase):
 class TestClientPortfolio(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/portfolio.xml').read()
-        cls.obj = ClientPortfolio.parse(xml)
+        with open('tests/portfolio.xml') as xml:
+            cls.obj = ClientPortfolio.parse(xml.read())
 
     def test_portfolio_tplus(self):
         o = self.obj
@@ -280,8 +280,8 @@ class TestClientPortfolio(ut.TestCase):
 class TestServerStatuses(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/server_statuses.xml').readlines()
-        cls.statuses = list(map(ServerStatus.parse, xml))
+        with open('tests/server_statuses.xml') as xml:
+            cls.statuses = list(map(ServerStatus.parse, xml.readlines()))
 
     def test_server_status1(self):
         o = self.statuses[0]
@@ -314,8 +314,8 @@ class TestServerStatuses(ut.TestCase):
 class TestHistoryCandles(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/candles.xml').read()
-        cls.obj = HistoryCandlePacket.parse(xml)
+        with open('tests/candles.xml') as xml:
+            cls.obj = HistoryCandlePacket.parse(xml.read())
 
     def test_packet(self):
         o = self.obj
@@ -351,23 +351,23 @@ class TestDateTimeMapper(ut.TestCase):
 
 class TestGlobalParse(ut.TestCase):
     def test_candles(self):
-        xml = open('tests/candles.xml').read()
-        obj = parse(xml)
+        with open('tests/candles.xml') as xml:
+            obj = parse(xml.read())
         self.assertTrue(obj and isinstance(obj,HistoryCandlePacket))
 
     def test_portfolio(self):
-        xml = open('tests/portfolio.xml').read()
-        obj = parse(xml)
+        with open('tests/portfolio.xml') as xml:
+            obj = parse(xml.read())
         self.assertTrue(obj and isinstance(obj,ClientPortfolio))
 
     def test_orders(self):
-        xml = open('tests/orders.xml').read()
-        obj = parse(xml)
+        with open('tests/orders.xml') as xml:
+            obj = parse(xml.read())
         self.assertTrue(obj and isinstance(obj,ClientOrderPacket))
 
     def test_trades(self):
-        xml = open('tests/trades.xml').read()
-        obj = parse(xml)
+        with open('tests/trades.xml') as xml:
+            obj = parse(xml.read())
         self.assertTrue(obj and isinstance(obj,ClientTradePacket))
 
 
@@ -401,9 +401,9 @@ class TestCmdResults(ut.TestCase):
 
 class TestClientAccount(ut.TestCase):
     @classmethod
-    def setUpClass(cls):
-        xml = open('tests/account.xml').read()
-        cls.obj = ClientAccount.parse(xml)
+    def setUpClass(cls):        
+        with open('tests/account.xml') as xml:
+            cls.obj = ClientAccount.parse(xml.read())
 
     def test_account(self):
         o = self.obj
@@ -426,8 +426,8 @@ class TestMarkets(ut.TestCase):
 class TestSecurity(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/securities.xml').read()
-        cls.obj = SecurityPacket.parse(xml)
+        with open('tests/securities.xml') as xml:
+            cls.obj = SecurityPacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, SecurityPacket)
@@ -461,8 +461,8 @@ class TestQuotations(ut.TestCase):
 class TestSubscribedTicks(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/alltrades.xml').read()
-        cls.obj = TradePacket.parse(xml)
+        with open('tests/alltrades.xml') as xml:
+            cls.obj = TradePacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, TradePacket)
@@ -485,8 +485,8 @@ class TestSubscribedTicks(ut.TestCase):
 class TestSubscribedBidAsks(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/quotes.xml').read()
-        cls.obj = QuotePacket.parse(xml)
+        with open('tests/quotes.xml') as xml:
+            cls.obj = QuotePacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, QuotePacket)
@@ -516,8 +516,8 @@ class TestSubscribedBidAsks(ut.TestCase):
 class TestClientPositions(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/positions.xml').read()
-        cls.obj = PositionPacket.parse(xml)
+        with open('tests/positions.xml') as xml:
+            cls.obj = PositionPacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, PositionPacket)
@@ -574,8 +574,8 @@ class TestClientPositions(ut.TestCase):
 class TestLimitsTPlus(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/limits_t+.xml').read()
-        cls.obj = ClientLimitsTPlus.parse(xml)
+        with open('tests/limits_t+.xml') as xml:
+            cls.obj = ClientLimitsTPlus.parse(xml.read())
 
     def test_limits(self):
         o = self.obj
@@ -599,8 +599,8 @@ class TestLimitsTPlus(ut.TestCase):
 class TestPits(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/pits.xml').read()
-        cls.obj = SecurityPitPacket.parse(xml)
+        with open('tests/pits.xml') as xml:
+            cls.obj = SecurityPitPacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, SecurityPitPacket)
@@ -620,8 +620,8 @@ class TestPits(ut.TestCase):
 class TestBoards(ut.TestCase):
     @classmethod
     def setUpClass(cls):
-        xml = open('tests/boards.xml').read()
-        cls.obj = BoardPacket.parse(xml)
+        with open('tests/boards.xml') as xml:            
+            cls.obj = BoardPacket.parse(xml.read())
 
     def test_packet(self):
         self.assertIsInstance(self.obj, BoardPacket)
