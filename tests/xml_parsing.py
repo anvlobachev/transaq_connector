@@ -93,7 +93,7 @@ class TestClientOrders(ut.TestCase):
         self.assertEqual(o.level, 239.12)
         self.assertEqual(o.correction, 0.01)
         self.assertEqual(o.withdraw_time, None)
-        self.assertEqual(o.result, u"TP исполнен")
+        self.assertEqual(o.result, u"TP исполнен".encode('utf8').decode('cp1251'))
 
     def test_order4(self):
         o = self.obj.items[3]
@@ -305,7 +305,8 @@ class TestServerStatuses(ut.TestCase):
         o = self.statuses[2]
         self.assertEqual(o.id, None)
         self.assertEqual(o.connected, "error")
-        self.assertEqual(o.text, u"Пользователь с таким идентификатором уже подключен к серверу")
+        expectedMsg = u"Пользователь с таким идентификатором уже подключен к серверу"
+        self.assertEqual(o.text, expectedMsg.encode('utf8').decode('cp1251'))
         self.assertEqual(o.timezone, None)
         self.assertEqual(o.recover, False)
 
@@ -440,7 +441,7 @@ class TestSecurity(ut.TestCase):
         self.assertEqual(o.sectype, 'SHARE')
         self.assertEqual(o.board, 'TQBR')
         self.assertEqual(o.market, 1)
-        self.assertEqual(o.name, u"Газпром ао")
+        self.assertEqual(o.name, u"Газпром ао".encode('utf8').decode('cp1251'))
         self.assertEqual(o.decimals, 2)
         self.assertEqual(o.minstep, .01)
         self.assertEqual(o.lotsize, 1)
@@ -529,7 +530,7 @@ class TestClientPositions(ut.TestCase):
         self.assertEqual(o.market, 1)
         self.assertEqual(o.client, 'test/C282166')
         self.assertEqual(o.seccode, 'GAZP')
-        self.assertEqual(o.name, u"Газпром ао")
+        self.assertEqual(o.name, u"Газпром ао".encode('utf8').decode('cp1251'))
         self.assertEqual(o.saldo_in, 3)
         self.assertEqual(o.saldo_min, 0)
         self.assertEqual(o.bought, 0)
@@ -545,7 +546,7 @@ class TestClientPositions(ut.TestCase):
         self.assertEqual(o.market, 1)
         self.assertEqual(o.client, 'test/C282166')
         self.assertEqual(o.seccode, 'MTSI')
-        self.assertEqual(o.name, u"МТС-ао")
+        self.assertEqual(o.name, u"МТС-ао".encode('utf8').decode('cp1251'))
         self.assertEqual(o.saldo_in, 0)
         self.assertEqual(o.saldo_min, 0)
         self.assertEqual(o.bought, 0)
@@ -560,7 +561,7 @@ class TestClientPositions(ut.TestCase):
         self.assertEqual(o.market, [1])
         self.assertEqual(o.client, 'test/C282166')
         self.assertEqual(o.asset, 'FOND_MICEX')
-        self.assertEqual(o.name, u"Рубли РФ КЦБ ММВБ")
+        self.assertEqual(o.name, u"Рубли РФ КЦБ ММВБ".encode('utf8').decode('cp1251'))
         self.assertEqual(o.saldo_in, 290855.36)
         self.assertEqual(o.saldo, 290855.36)
         self.assertEqual(o.bought, 0)
