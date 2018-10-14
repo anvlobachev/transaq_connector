@@ -347,7 +347,7 @@ class TestHistoryCandles(ut.TestCase):
 
 class TestDateTimeMapper(ut.TestCase):
     def setUp(self):
-        self.mapper = NullableDateTimeMapper(timeformat)
+        self.mapper = NullableDateTimeMapper(TIME_FORMAT)
 
     def test_null(self):
         self.assertEqual(self.mapper.to_python(None), None)
