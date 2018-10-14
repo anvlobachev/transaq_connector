@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Модуль со структурными классами Transaq XML Коннектора.
 Всем основным xml структурам сопоставлены питоновые объекты.
@@ -6,16 +5,19 @@
 
 @author: Roma
 """
-from eulxml.xmlmap import parseString, XmlObject, load_xmlobject_from_string, StringField, FloatField, \
-    DateTimeField, IntegerField, SimpleBooleanField, NodeListField, ItemField, IntegerListField, NodeField
+import sys
+import inspect
+import logging
+from eulxml.xmlmap import parseString, XmlObject, load_xmlobject_from_string, \
+    StringField, FloatField, DateTimeField, IntegerField, SimpleBooleanField, \
+    NodeListField, ItemField, IntegerListField, NodeField
 from eulxml.xmlmap.fields import Field, DateTimeMapper
-import sys, inspect, logging
 
-log = logging.getLogger("transaq.connector")
+LOG = logging.getLogger("transaq.connector")
 # Формат дат/времени используемый Транзаком
-timeformat = "%d.%m.%Y %H:%M:%S"
+TIME_FORMAT = "%d.%m.%Y %H:%M:%S"
 # Список классов, ленивая инициализация при парсинге
-_my_classes = []
+_MY_CLASSES = []
 
 
 def parse(xml):
@@ -27,23 +29,23 @@ def parse(xml):
     :return:
         Распарсенный объект. None если не распознан.
     """
-    global _my_classes
+    global _MY_CLASSES
     # Корневой тег достанем
     root = parseString(xml).tag
     # Пройдемся по всем классам модуля и найдем подходящий
-    if not _my_classes:
-        _my_classes = filter(lambda o: inspect.isclass(o) and issubclass(o, MyXmlObject),
+    if not _MY_CLASSES:
+        _MY_CLASSES = filter(lambda o: inspect.isclass(o) and issubclass(o, MyXmlObject),
                              sys.modules[__name__].__dict__.values())
-    for cls in _my_classes:
+    for cls in _MY_CLASSES:
         if root == cls.ROOT_NAME:
             return cls.parse(xml)
     # Лабуда какая-то пришла
-    log.error(u"Неподдерживаемый xml, не распарсился нихрена! Типа %s" % xml[:10])
-    log.debug(xml)
+    LOG.error(u"Неподдерживаемый xml типа %s" % xml[:10])
+    LOG.debug(xml)
     return None
 
 
-## Вспомогательные классы
+# Вспомогательные классы
 
 class NullableDateTimeMapper(DateTimeMapper):
     """
@@ -72,6 +74,7 @@ class MyXmlObject(XmlObject):
 
     @classmethod
     def parse(cls, xml):
+        """Запуск парсера из XML"""
         return load_xmlobject_from_string(xml, cls)
 
     def __repr__(self):
@@ -93,7 +96,7 @@ class Entity(MyXmlObject):
     id = IntegerField('@id')
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.id == other.id
+        return isinstance(self, type(other)) and self.id == other.id
 
 
 class Packet(MyXmlObject):
@@ -129,14 +132,14 @@ class CmdResult(MyXmlObject):
     id = IntegerField('@transactionid')
 
 
-## Классы xml структур Транзака
+# Классы xml структур Транзака
 
 class HistoryCandle(Entity):
     """
     Свечки OHLCV (open,high,low,close).
     """
     ROOT_NAME = 'candle'
-    date = DateTimeField('@date', timeformat)
+    date = DateTimeField('@date', TIME_FORMAT)
     id = hash(date)
     open = FloatField('@open')
     high = FloatField('@high')
@@ -269,7 +272,8 @@ class Security(Entity):
     bymarket_allowed = SimpleBooleanField('opmask/@bymarket', 'yes', 'no')
     nosplit_allowed = SimpleBooleanField('opmask/@nosplit', 'yes', 'no')
     immediate_allowed = SimpleBooleanField('opmask/@immorcancel', 'yes', 'no')
-    cancelbalance_allowed = SimpleBooleanField('opmask/@cancelbalance', 'yes', 'no')
+    cancelbalance_allowed = SimpleBooleanField(
+        'opmask/@cancelbalance', 'yes', 'no')
 
 
 class SecurityPacket(Packet):
@@ -295,7 +299,7 @@ class SecInfo(Entity):
     # Единицы измерения цены
     pname = StringField('pname')
     # Дата погашения
-    mat_date = DateTimeField('mat_date', timeformat)
+    mat_date = DateTimeField('mat_date', TIME_FORMAT)
     # Цена последнего клиринга (только FORTS)
     clearing_price = FloatField('clearing_price')
     # Минимальная цена (только FORTS)
@@ -315,15 +319,15 @@ class SecInfo(Entity):
     # Размер купона, руб
     coupon_value = FloatField('coupon_value')
     # Дата погашения купона
-    coupon_date = DateTimeField('coupon_date', timeformat)
+    coupon_date = DateTimeField('coupon_date', TIME_FORMAT)
     # Период выплаты купона, дни
     coupon_period = IntegerField('coupon_period')
     # Номинал облигации или акции, руб
     facevalue = FloatField('facevalue')
     # Тип опциона Call(C)/Put(P)
-    put_call = StringField('put_call', choices=('C','P'))
+    put_call = StringField('put_call', choices=('C', 'P'))
     # Маржинальный(M)/премия(P)
-    opt_type = StringField('opt_type', choices=('M','P'))
+    opt_type = StringField('opt_type', choices=('M', 'P'))
     # Количество базового актива (FORTS)
     lot_volume = IntegerField('lot_volume')
 
@@ -401,7 +405,7 @@ class Quotation(Entity):
     # Цена последней сделки
     last_price = FloatField('last')
     # Время заключения последней сделки
-    last_time = DateTimeField('time', timeformat)
+    last_time = DateTimeField('time', TIME_FORMAT)
     # Объем последней сделки, в лотах
     last_quantity = IntegerField('quantity')
     # Изменение цены последней сделки по отношению к цене последней сделки предыдущего торгового дня
@@ -463,7 +467,7 @@ class Trade(Entity):
     # Биржевой номер сделки
     id = trade_no = IntegerField('tradeno')
     # Время сделки
-    time = DateTimeField('time', timeformat)
+    time = DateTimeField('time', TIME_FORMAT)
     # Цена сделки
     price = FloatField('price')
     # Объём в лотах
@@ -472,7 +476,8 @@ class Trade(Entity):
     buysell = StringField('buysell', choices=('B', 'S'))
     open_interest = IntegerField('openinterest')
     # Период торгов (O - открытие, N - торги, С - закрытие)
-    trade_period = StringField('period', choices=('O', 'N', 'C', 'F', 'B', 'T', 'L'))
+    trade_period = StringField('period', choices=(
+        'O', 'N', 'C', 'F', 'B', 'T', 'L'))
 
 
 class TradePacket(Packet):
@@ -530,7 +535,7 @@ class BaseOrder(Entity):
     # Цена
     price = FloatField('price')
     # Время регистрации заявки биржей
-    time = DateTimeField('time', timeformat)
+    time = DateTimeField('time', TIME_FORMAT)
     # Идентификатор клиента
     client = StringField('client')
     # Cтатус заявки
@@ -538,23 +543,24 @@ class BaseOrder(Entity):
     # Покупка (B) / Продажа (S)
     buysell = StringField('buysell', choices=('B', 'S'))
     # Дата экспирации (только для ФОРТС)
-    exp_date = DateTimeField('expdate', timeformat)
+    exp_date = DateTimeField('expdate', TIME_FORMAT)
     # Примечание
     broker_ref = StringField('brokerref')
     # Время регистрации заявки сервером Transaq (только для условных заявок)
-    accept_time = DateTimeField('accepttime', timeformat)
+    accept_time = DateTimeField('accepttime', TIME_FORMAT)
     # До какого момента действительно
-    valid_before = DateTimeField('validbefore', timeformat)
+    valid_before = DateTimeField('validbefore', TIME_FORMAT)
     # Количество лотов
     quantity = IntegerField('quantity')
     # Время снятия заявки, 0 для активных
-    withdraw_time = DateTimeField('withdrawtime', timeformat)
-    withdraw_time.mapper = NullableDateTimeMapper(timeformat)
+    withdraw_time = DateTimeField('withdrawtime', TIME_FORMAT)
+    withdraw_time.mapper = NullableDateTimeMapper(TIME_FORMAT)
     # Сообщение биржи в случае отказа выставить заявку
     result = StringField('result')
 
 
 class Order(BaseOrder):
+    """Базовый класс ордера"""
     ROOT_NAME = 'order'
     # Биржевой номер заявки
     origin_order_no = IntegerField('origin_orderno')
@@ -575,18 +581,21 @@ class Order(BaseOrder):
     # Цена для условной заявки, либо обеспеченность в процентах
     condition_value = FloatField('conditionvalue')
     # С какого момента времени действительна
-    valid_after = DateTimeField('valid_after', timeformat)
+    valid_after = DateTimeField('valid_after', TIME_FORMAT)
     # Максимальная комиссия по сделкам заявки
     max_commission = FloatField('maxcomission')
 
 
 class StopOrder(BaseOrder):
+    """Стоп заявка"""
     ROOT_NAME = 'stoporder'
-    # номер заявки Биржевой регистрационный номер заявки, выставленной на рынок в результате исполнения cтопа
+    # номер заявки Биржевой регистрационный номер заявки,
+    # выставленной на рынок в результате исполнения cтопа
     order_no = IntegerField('activeorderno')
     # Идентификатор трейдера, который отменил стоп
     canceller = StringField('canceller')
-    # Биржевой  регистрационный  номер  сделки,  явившейся основанием для перехода стопа в текущее состояние
+    # Биржевой  регистрационный  номер  сделки,
+    # явившейся основанием для перехода стопа в текущее состояние
     alltrade_no = IntegerField('alltradeno')
     # Афтар заявки
     author = StringField('author')
@@ -597,6 +606,7 @@ class StopOrder(BaseOrder):
 
 
 class StopLoss(StopOrder):
+    """Стоп лосс оредер"""
     # Использование кредита
     use_credit = SimpleBooleanField('stoploss/@usecredit', 'yes', 'no')
     # Цена активации
@@ -604,8 +614,9 @@ class StopLoss(StopOrder):
     # Рыночное исполнение
     bymarket = ItemField('bymarket')
     # Защитное время удержания цены
-    # (когда цены на рынке лишь кратковременно достигают уровня цены активации, и вскоре возвращаются обратно)
-    guard_time = DateTimeField('stoploss/guardtime', timeformat)
+    # (когда цены на рынке лишь кратковременно достигают уровня цены активации,
+    # и вскоре возвращаются обратно)
+    guard_time = DateTimeField('stoploss/guardtime', TIME_FORMAT)
     # Примечание
     broker_ref = StringField('stoploss/brokerref')
     # Количество лотов
@@ -615,21 +626,26 @@ class StopLoss(StopOrder):
 
 
 class TakeProfit(StopOrder):
+    """Тейк профит ордер"""
     # Цена активации
     activation_price = FloatField('takeprofit/activationprice')
     # Защитное время удержания цены
-    # (когда цены на рынке лишь кратковременно достигают уровня цены активации, и вскоре возвращаются обратно)
-    guard_time = DateTimeField('takeprofit/guardtime', timeformat)
+    # (когда цены на рынке лишь кратковременно достигают уровня цены активации,
+    # и вскоре возвращаются обратно)
+    guard_time = DateTimeField('takeprofit/guardtime', TIME_FORMAT)
     # Достигнутый максимум
     extremum = FloatField('takeprofit/extremum')
     # Уровень исполнения?
     level = FloatField('takeprofit/level')
     # Коррекция
-    # Позволяет выставить на Биржу заявку, закрывающую позицию в момент окончания тренда на рынке.
+    # Позволяет выставить на Биржу заявку,
+    # закрывающую позицию в момент окончания тренда на рынке.
     correction = FloatField('takeprofit/correction')
     # Защитный спрэд
-    # Для определения цены заявки, исполняющей TP на покупку, защитный спрэд прибавляется к цене рынка.
-    # Для определения цены заявки, исполняющей TP на продажу, защитный спрэд вычитается из цены рынка.
+    # Для определения цены заявки, исполняющей TP на покупку,
+    # защитный спрэд прибавляется к цене рынка.
+    # Для определения цены заявки, исполняющей TP на продажу,
+    # защитный спрэд вычитается из цены рынка.
     guard_spread = FloatField('takeprofit/guardspread')
     # Примечание
     broker_ref = StringField('takeprofit/brokerref')
@@ -681,7 +697,7 @@ class ClientTrade(Entity):
     # B - покупка, S - продажа
     buysell = StringField('buysell', choices=('B', 'S'))
     # Время сделки
-    time = DateTimeField('time', timeformat)
+    time = DateTimeField('time', TIME_FORMAT)
     # Примечание
     broker_ref = StringField('brokerref')
     # Объем сделки
@@ -743,6 +759,7 @@ class ClientPosition(Entity):
 
 
 class MoneyPosition(ClientPosition):
+    """Денежная позиция"""
     ROOT_NAME = 'money_position'
     id = -1
     # Внутренний коды доступных рынков
@@ -755,6 +772,7 @@ class MoneyPosition(ClientPosition):
 
 
 class SecurityPosition(ClientPosition):
+    """Клиентская позиция"""
     ROOT_NAME = 'sec_position'
     # Код инструмента
     id = secid = IntegerField('secid')
@@ -766,18 +784,22 @@ class SecurityPosition(ClientPosition):
 
 # TODO Дописать позиции фортс
 class ClientPositionForts(Entity):
+    """Клиентская позиция ФОРТС"""
     pass
 
 
 class ClientMoneyForts(ClientPositionForts):
+    """Денежная позиция ФОРТС"""
     pass
 
 
 class SpotLimits(ClientPositionForts):
+    """Спот лимиты ФОРТС"""
     pass
 
 
 class FortCollaterals(ClientPositionForts):
+    """ФОРТС Коллатералс(?)"""
     pass
 
 
@@ -1006,7 +1028,7 @@ class HistoryTick(Trade):
     """
     ROOT_NAME = 'tick'
     secid = IntegerField('secid')
-    time = DateTimeField('trade_time', timeformat)
+    time = DateTimeField('trade_time', TIME_FORMAT)
 
 
 class HistoryTickPacket(Packet):
@@ -1096,7 +1118,7 @@ class TextMessage(Entity):
     """
     ROOT_NAME = 'message'
     # Дата
-    id = date = DateTimeField('date', timeformat)
+    id = date = DateTimeField('date', TIME_FORMAT)
     # Срочность
     urgent = SimpleBooleanField('urgent', 'Y', 'N')
     # Отправитель
@@ -1152,7 +1174,7 @@ class NewsHeader(MyXmlObject):
     """
     ROOT_NAME = 'news_header'
     id = IntegerField('id')
-    time = DateTimeField('timestamp', timeformat)
+    time = DateTimeField('timestamp', TIME_FORMAT)
     source = StringField('source')
     title = StringField('title')
 
@@ -1243,7 +1265,7 @@ class UnitedPortfolio(MyXmlObject):
         init_req = FloatField('init_req')
         # Минимальная маржа
         maint_req = FloatField('maint_req')
-        
+
         class _Security(MyXmlObject):
             # Id инструмента
             secid = IntegerField('@secid')
