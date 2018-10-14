@@ -63,8 +63,8 @@ class NullableDateTimeMapper(DateTimeMapper):
             rep = self.XPATH(node)
         if rep in self.nones:
             return None
-        else:
-            return super(NullableDateTimeMapper, self).to_python(node)
+
+        return super(NullableDateTimeMapper, self).to_python(node)
 
 
 class MyXmlObject(XmlObject):
