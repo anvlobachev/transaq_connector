@@ -32,7 +32,8 @@ class TransaqConnection():
         BYTE* UnInitialize();
 
         """
-        self.txml_dll.GetServiceInfo.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        self.txml_dll.GetServiceInfo.argtypes = [
+            ctypes.c_char_p, ctypes.c_char_p]
         self.txml_dll.GetServiceInfo.restype = ctypes.c_int
 
         self.txml_dll.Initialize.argtypes = [ctypes.c_char_p, ctypes.c_int]
@@ -45,7 +46,7 @@ class TransaqConnection():
         self.txml_dll.SetLogLevel.restype = ctypes.c_char_p
 
         self.txml_dll.SendCommand.argtypes = [ctypes.c_char_p]
-        self.txml_dll.SendCommand.restype = ctypes.c_char_p      
+        self.txml_dll.SendCommand.restype = ctypes.c_char_p
 
         # self.txml_dll.SetCallback.argtypes = []
         # self.txml_dll.SetCallback.restype = ctypes.c_bool
@@ -58,7 +59,6 @@ class TransaqConnection():
 
         self.txml_dll.UnInitialize.argtypes = []
         self.txml_dll.UnInitialize.restype = ctypes.c_char_p
-
 
     def __init__(self, logdir, loglevel=2, logfile_lifetime=7):
         """
@@ -88,7 +88,6 @@ class TransaqConnection():
         if not self.txml_dll.SetCallback(c.callback):
             raise c.TransaqException('Callback has not been established')
 
-
     def __del__(self):
         """
         Closes Callback connections. Perform disconnect if neccecary.
@@ -96,14 +95,12 @@ class TransaqConnection():
         """
         self.disconnect()
         msg = self.txml_dll.UnInitialize()
-        if msg != 0:
+        if msg:
             raise c.TransaqException(s.Error.parse(msg).text)
-
 
     def __send_command(self, element):
         # Send the message and check for errors
-        cmd = et.tostring(element, encoding="utf-8")
-        msg = self.txml_dll.SendCommand(cmd)
+        msg = self.txml_dll.SendCommand(et.tostring(element, encoding="utf-8"))
         err = s.Error.parse(msg)
         if err.text:
             raise c.TransaqException(err.text.encode(SYS_ENCODING))
@@ -122,7 +119,6 @@ class TransaqConnection():
         et.SubElement(command, "port").text = port
         et.SubElement(command, "rqdelay").text = str(min_delay)
         return self.__send_command(command)
-
 
     def disconnect(self):
         """
