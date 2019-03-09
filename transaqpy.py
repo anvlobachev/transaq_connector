@@ -29,6 +29,10 @@ class TransaqConnection():
         self.txml_dll = ctypes.WinDLL(os.path.join(
             os.path.dirname(__file__), "txmlconnector64.dll"))
 
+        #set types for methods
+        self.txml_dll.SendCommand.argtypes = [ctypes.c_char_p]
+        self.txml_dll.SendCommand.restype = ctypes.c_char_p
+
         err = 0
         if not os.path.exists(logdir):
             os.mkdir(logdir)
@@ -40,7 +44,7 @@ class TransaqConnection():
 
         err = self.txml_dll.InitializeEx(et.tostring(init))
         if err != 0:
-            msg = self.__get_message(err)
+            msg = self.__read_message_from_memory(err)
             raise c.TransaqException(s.Error.parse(msg).text)
         if not self.txml_dll.SetCallback(c.callback):
             raise c.TransaqException('Callback has not been established')
@@ -54,24 +58,27 @@ class TransaqConnection():
         self.disconnect()
         err = self.txml_dll.UnInitialize()
         if err != 0:
-            msg = self.__get_message(err)
+            msg = self.__read_message_from_memory(err)
             raise c.TransaqException(s.Error.parse(msg).text)
 
 
-    def __get_message(self, ptr):
+    def __read_message_from_memory(self, ptr):
         """
         Get message from native memory. Free memory from ptr.
         """
-        msg = ctypes.string_at(ptr)
-        self.txml_dll.FreeMemory(ptr)
+        msg = ''
+
+        if ptr:
+            msg = ctypes.string_at(ptr)
+            print("!!!!>>>" + msg)
+            # self.txml_dll.FreeMemory(ptr)
         return msg
 
 
     def __send_command(self, element):
         # Send the message and check for errors
         cmd = et.tostring(element, encoding="utf-8")
-        ptr = self.txml_dll.SendCommand(cmd)
-        msg = self.__get_message(ptr)
+        msg = self.txml_dll.SendCommand(cmd)
         err = s.Error.parse(msg)
         if err.text:
             raise c.TransaqException(err.text.encode(SYS_ENCODING))
