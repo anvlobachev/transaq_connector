@@ -17,6 +17,49 @@ class TransaqConnection():
     Transaq connection entity
     """
 
+    def __init_dll_method_types__(self):
+        """
+        Init types accordig to documentation.
+        methods:
+        int GetServiceInfo(const BYTE* request, BYTE** response);
+        BYTE* Initialize(const BYTE* logPath, int logLevel);
+        BYTE* InitializeEx(const BYTE* data);
+        BYTE* SetLogLevel(int logLevel)
+        BYTE* SendCommand(BYTE* pData);
+        bool SetCallback(tcallback pCallback);
+        bool SetCallbackEx(tcallbackEx pCallbackEx, void* userData);
+        bool FreeMemory(BYTE* pData);
+        BYTE* UnInitialize();
+
+        """
+        self.txml_dll.GetServiceInfo.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        self.txml_dll.GetServiceInfo.restype = ctypes.c_int
+
+        self.txml_dll.Initialize.argtypes = [ctypes.c_char_p, ctypes.c_int]
+        self.txml_dll.Initialize.restype = ctypes.c_char_p
+
+        self.txml_dll.InitializeEx.argtypes = [ctypes.c_char_p]
+        self.txml_dll.InitializeEx.restype = ctypes.c_char_p
+
+        self.txml_dll.SetLogLevel.argtypes = [ctypes.c_int]
+        self.txml_dll.SetLogLevel.restype = ctypes.c_char_p
+
+        self.txml_dll.SendCommand.argtypes = [ctypes.c_char_p]
+        self.txml_dll.SendCommand.restype = ctypes.c_char_p      
+
+        # self.txml_dll.SetCallback.argtypes = []
+        # self.txml_dll.SetCallback.restype = ctypes.c_bool
+
+        # self.txml_dll.SetCallbackEx.argtypes = []
+        # self.txml_dll.SetCallbackEx.restype = ctypes.c_bool
+
+        self.txml_dll.FreeMemory.argtypes = [ctypes.c_char_p]
+        self.txml_dll.FreeMemory.restype = ctypes.c_bool
+
+        self.txml_dll.UnInitialize.argtypes = []
+        self.txml_dll.UnInitialize.restype = ctypes.c_char_p
+
+
     def __init__(self, logdir, loglevel=2, logfile_lifetime=7):
         """
         :param logdir: log directory. ends with \\
@@ -29,11 +72,8 @@ class TransaqConnection():
         self.txml_dll = ctypes.WinDLL(os.path.join(
             os.path.dirname(__file__), "txmlconnector64.dll"))
 
-        #set types for methods
-        self.txml_dll.SendCommand.argtypes = [ctypes.c_char_p]
-        self.txml_dll.SendCommand.restype = ctypes.c_char_p
+        self.__init_dll_method_types__()
 
-        err = 0
         if not os.path.exists(logdir):
             os.mkdir(logdir)
 
@@ -42,9 +82,8 @@ class TransaqConnection():
         init.set('log_level', str(loglevel))
         init.set('logfile_lifetime', str(logfile_lifetime))
 
-        err = self.txml_dll.InitializeEx(et.tostring(init))
-        if err != 0:
-            msg = self.__read_message_from_memory(err)
+        msg = self.txml_dll.InitializeEx(et.tostring(init))
+        if msg:
             raise c.TransaqException(s.Error.parse(msg).text)
         if not self.txml_dll.SetCallback(c.callback):
             raise c.TransaqException('Callback has not been established')
@@ -56,23 +95,9 @@ class TransaqConnection():
         :return:
         """
         self.disconnect()
-        err = self.txml_dll.UnInitialize()
-        if err != 0:
-            msg = self.__read_message_from_memory(err)
+        msg = self.txml_dll.UnInitialize()
+        if msg != 0:
             raise c.TransaqException(s.Error.parse(msg).text)
-
-
-    def __read_message_from_memory(self, ptr):
-        """
-        Get message from native memory. Free memory from ptr.
-        """
-        msg = ''
-
-        if ptr:
-            msg = ctypes.string_at(ptr)
-            print("!!!!>>>" + msg)
-            # self.txml_dll.FreeMemory(ptr)
-        return msg
 
 
     def __send_command(self, element):
@@ -90,18 +115,18 @@ class TransaqConnection():
         Connect to server.
         """
         host, port = server.split(':')
-        root = et.Element("command", {"id": "connect"})
-        et.SubElement(root, "login").text = login
-        et.SubElement(root, "password").text = password
-        et.SubElement(root, "host").text = host
-        et.SubElement(root, "port").text = port
-        et.SubElement(root, "rqdelay").text = str(min_delay)
-        return self.__send_command(root)
+        command = et.Element("command", {"id": "connect"})
+        et.SubElement(command, "login").text = login
+        et.SubElement(command, "password").text = password
+        et.SubElement(command, "host").text = host
+        et.SubElement(command, "port").text = port
+        et.SubElement(command, "rqdelay").text = str(min_delay)
+        return self.__send_command(command)
 
 
     def disconnect(self):
         """
         Disconnect from server.
         """
-        root = et.Element("command", {"id": "disconnect"})
-        return self.__send_command(root)
+        command = et.Element("command", {"id": "disconnect"})
+        return self.__send_command(command)
