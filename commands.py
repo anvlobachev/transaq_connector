@@ -27,10 +27,40 @@ if __file__ is not None:
     if path != "":
         path += os.sep
 
-dll_file = os.path.join(os.getcwd(), "txmlconnector64.dll" if platform.machine() == 'AMD64' else 'txmlconnector.dll')
-txml_dll = ctypes.WinDLL(dll_file)
 connected = False
 encoding = sys.stdout.encoding
+
+
+def load_dll():
+    dll_file = os.path.join(os.getcwd(), "txmlconnector64.dll" if platform.machine(
+    ) == 'AMD64' else 'txmlconnector.dll')
+    dll = ctypes.WinDLL(dll_file)
+
+    dll.GetServiceInfo.argtypes = (ctypes.c_char_p, ctypes.c_char_p)
+    dll.GetServiceInfo.restype = ctypes.c_int
+
+    dll.Initialize.argtypes = (ctypes.c_char_p, ctypes.c_int)
+    dll.Initialize.restype = ctypes.c_char_p
+
+    dll.SetLogLevel.argtypes = (ctypes.c_int,)
+    dll.SetLogLevel.restype = ctypes.c_char_p
+
+    dll.SendCommand.argtypes = (ctypes.c_char_p,)
+    dll.SendCommand.restype = ctypes.c_char_p
+
+    dll.FreeMemory.argtypes = (ctypes.c_char_p,)
+    dll.FreeMemory.restype = ctypes.c_bool
+
+    dll.SetCallback.restype = ctypes.c_bool
+
+    dll.SetCallbackEx.restype = ctypes.c_bool
+
+    dll.UnInitialize.restype = ctypes.c_char_p
+
+    return dll
+
+
+txml_dll = load_dll()
 
 
 @callback_func
@@ -69,7 +99,7 @@ class TransaqException(Exception):
 
 def __get_message(ptr):
     # Достать сообщение из нативной памяти.
-    msg = ctypes.string_at(ptr)
+    msg = ptr.decode('utf-8')
     txml_dll.FreeMemory(ptr)
     return msg
 
@@ -104,7 +134,7 @@ def initialize(logdir, loglevel, msg_handler):
     if not os.path.exists(logdir):
         os.mkdir(logdir)
     err = txml_dll.Initialize(logdir.encode('utf-8'), loglevel)
-    if err != 0:
+    if err:
         msg = __get_message(err)
         raise TransaqException(Error.parse(msg).text.encode(encoding))
     if not txml_dll.SetCallback(callback):
@@ -134,7 +164,6 @@ def connect(login, password, server, min_delay=100):
     root.append(__elem("port", port))
     root.append(__elem("rqdelay", str(min_delay)))
     cmd = et.tostring(root, encoding="utf-8")
-    print(cmd)
     return __send_command(cmd)
 
 
@@ -308,6 +337,7 @@ def get_history_xml(board, seccode, period, count, reset=True):
     root.append(__elem("reset", "true" if reset else "false"))
     return et.tostring(root, encoding="utf-8")
 
+
 def get_history(board, seccode, period, count, reset=True):
     """
     Выдать последние N свечей заданного периода, по заданному инструменту.
@@ -363,7 +393,8 @@ def get_forts_position(client):
     :return:
         Результат отправки команды.
     """
-    root = et.Element("command", {"id": "get_forts_position", "client": client})
+    root = et.Element(
+        "command", {"id": "get_forts_position", "client": client})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
@@ -401,7 +432,8 @@ def change_pass(oldpass, newpass):
     :return:
         Результат команды.
     """
-    root = et.Element("command", {"id": "change_pass", "oldpass": oldpass, "newpass": newpass})
+    root = et.Element(
+        "command", {"id": "change_pass", "oldpass": oldpass, "newpass": newpass})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
@@ -471,7 +503,8 @@ def get_limits_tplus(client, securities):
     :return:
         Результат отправки команды.
     """
-    root = et.Element("command", {"id": "get_max_buy_sell_tplus", "client": client})
+    root = et.Element(
+        "command", {"id": "get_max_buy_sell_tplus", "client": client})
     for (market, code) in securities:
         sec = et.Element("security")
         sec.append(__elem("market", str(market)))
@@ -490,6 +523,7 @@ def get_portfolio_mct(client):
         Результат отправки команды.
     """
     return NotImplemented
+
 
 def get_united_portfolio(client, union=None):
     """
