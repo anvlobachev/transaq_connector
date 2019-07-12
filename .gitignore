@@ -9,3 +9,6 @@ build/
 docs/build/
 txmlconnector*.dll
 .env
+TXmlConnector_6.06.2.20.25.doc
+TXmlConnector.pdf
+test.py

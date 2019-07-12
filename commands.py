@@ -10,8 +10,11 @@
     Результат исполнения приходит позже в зарегистрированный командой *initialize()* хэндлер.
     Синхронные вспомогательные команды помечены отдельно.
 """
-import ctypes, logging
-import platform, os, sys
+import ctypes
+import logging
+import platform
+import os
+import sys
 import lxml.etree as et
 from structures import *
 log = logging.getLogger("transaq.connector")
@@ -24,7 +27,8 @@ if __file__ is not None:
     if path != "":
         path += os.sep
 
-txml_dll = ctypes.WinDLL(path + ("txmlconnector64.dll" if platform.machine() == 'AMD64' else 'txmlconnector.dll') )
+dll_file = os.path.join(os.getcwd(), "txmlconnector64.dll" if platform.machine() == 'AMD64' else 'txmlconnector.dll')
+txml_dll = ctypes.WinDLL(dll_file)
 connected = False
 encoding = sys.stdout.encoding
 
@@ -41,15 +45,15 @@ def callback(msg):
     """
     obj = parse(msg.decode('utf8'))
     if isinstance(obj, Error):
-        log.error(u"Траблы: %s" % obj.text)
+        log.error("Error: %s" % obj.text)
         raise TransaqException(obj.text.encode(encoding))
     elif isinstance(obj, ServerStatus):
-        log.info(u"Соединен с серваком: %s" % obj.connected)
+        log.info("Connected to server: %s" % obj.connected)
         if obj.connected == 'error':
-            log.warn(u"Ёпта, ошибка соединения: %s" % obj.text)
+            log.warn("Connection error: %s" % obj.text)
         log.debug(obj)
     else:
-        log.info(u"Получил объект типа %s" % str(type(obj)))
+        log.info("Received object type %s" % str(type(obj)))
         log.debug(obj)
     if global_handler:
         global_handler(obj)
@@ -99,12 +103,12 @@ def initialize(logdir, loglevel, msg_handler):
     global_handler = msg_handler
     if not os.path.exists(logdir):
         os.mkdir(logdir)
-    err = txml_dll.Initialize(logdir + "\0", loglevel)
+    err = txml_dll.Initialize(logdir.encode('utf-8'), loglevel)
     if err != 0:
         msg = __get_message(err)
         raise TransaqException(Error.parse(msg).text.encode(encoding))
     if not txml_dll.SetCallback(callback):
-        raise TransaqException(u"Коллбэк не установился")
+        raise TransaqException("Callback hasn't been set")
 
 
 def uninitialize():
@@ -129,7 +133,9 @@ def connect(login, password, server, min_delay=100):
     root.append(__elem("host", host))
     root.append(__elem("port", port))
     root.append(__elem("rqdelay", str(min_delay)))
-    return __send_command(et.tostring(root, encoding="utf-8"))
+    cmd = et.tostring(root, encoding="utf-8")
+    print(cmd)
+    return __send_command(cmd)
 
 
 def disconnect():
@@ -291,6 +297,17 @@ def get_markets():
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
+def get_history_xml(board, seccode, period, count, reset=True):
+    root = et.Element("command", {"id": "gethistorydata"})
+    sec = et.Element("security")
+    sec.append(__elem("board", board))
+    sec.append(__elem("seccode", seccode))
+    root.append(sec)
+    root.append(__elem("period", str(period)))
+    root.append(__elem("count", str(count)))
+    root.append(__elem("reset", "true" if reset else "false"))
+    return et.tostring(root, encoding="utf-8")
+
 def get_history(board, seccode, period, count, reset=True):
     """
     Выдать последние N свечей заданного периода, по заданному инструменту.
@@ -309,15 +326,7 @@ def get_history(board, seccode, period, count, reset=True):
     :return:
         Результат отправки команды.
     """
-    root = et.Element("command", {"id": "gethistorydata"})
-    sec = et.Element("security")
-    sec.append(__elem("board", board))
-    sec.append(__elem("seccode", seccode))
-    root.append(sec)
-    root.append(__elem("period", str(period)))
-    root.append(__elem("count", str(count)))
-    root.append(__elem("reset", "true" if reset else "false"))
-    return __send_command(et.tostring(root, encoding="utf-8"))
+    return __send_command(get_history_xml(board, seccode, period, count, reset=True))
 
 
 # TODO Доделать условные заявки
