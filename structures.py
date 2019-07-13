@@ -14,6 +14,7 @@ from eulxml.xmlmap import parseString, XmlObject, load_xmlobject_from_string, \
 from eulxml.xmlmap.fields import Field, DateTimeMapper
 
 LOG = logging.getLogger("transaq.connector")
+
 # Формат дат/времени используемый Транзаком
 TIME_FORMAT = "%d.%m.%Y %H:%M:%S"
 # Список классов, ленивая инициализация при парсинге
@@ -29,19 +30,14 @@ def parse(xml):
     :return:
         Распарсенный объект. None если не распознан.
     """
-    global _MY_CLASSES
     # Корневой тег достанем
     root = parseString(xml).tag
     # Пройдемся по всем классам модуля и найдем подходящий
-    if not _MY_CLASSES:
-        _MY_CLASSES = filter(lambda o: inspect.isclass(o) and issubclass(o, MyXmlObject),
-                             sys.modules[__name__].__dict__.values())
     for cls in _MY_CLASSES:
         if root == cls.ROOT_NAME:
             return cls.parse(xml)
     # Лабуда какая-то пришла
-    LOG.error(u"Неподдерживаемый xml типа %s" % xml[:10])
-    LOG.debug(xml)
+    LOG.error(f"Unsupported XML:\n{xml}")
     return None
 
 
@@ -1333,3 +1329,7 @@ class UnitedPortfolio(MyXmlObject):
         securities = NodeListField('security', _Security)
 
     assets = NodeListField('asset', _Asset)
+
+
+_MY_CLASSES = list(filter(lambda o: inspect.isclass(o) and issubclass(o, (Entity, MyXmlObject)),
+                        sys.modules[__name__].__dict__.values()))
