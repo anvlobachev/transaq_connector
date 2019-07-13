@@ -205,7 +205,8 @@ class TestClientPortfolio(ut.TestCase):
         self.assertEqual(obj.money.balance, 290559.96)
         self.assertEqual(obj.money.settled, 0)
         self.assertEqual(obj.money.tax, 0)
-        self.assertTrue(obj.money.value_parts and len(obj.money.value_parts) == 3)
+        self.assertTrue(obj.money.value_parts and len(
+            obj.money.value_parts) == 3)
         _o = obj.money.value_parts[0]
         self.assertEqual(_o.register, 'C')
 
@@ -314,7 +315,8 @@ class TestServerStatuses(ut.TestCase):
         self.assertEqual(obj.id, None)
         self.assertEqual(obj.connected, "error")
         expected_msg = u"Пользователь с таким идентификатором уже подключен к серверу"
-        self.assertEqual(obj.text, expected_msg.encode('utf8').decode('cp1251'))
+        self.assertEqual(obj.text, expected_msg.encode(
+            'utf8').decode('cp1251'))
         self.assertEqual(obj.timezone, None)
         self.assertEqual(obj.recover, False)
 
@@ -380,6 +382,13 @@ class TestGlobalParse(ut.TestCase):
         self.assertTrue(obj and isinstance(obj, ClientTradePacket))
 
 
+class TestEntity(ut.TestCase):
+    def test_some(self):
+        xml = "<NoneClass id=\"1\"/>"
+        obj = parse(xml)
+        self.assertIsNone(obj)
+
+
 class TestError(ut.TestCase):
     def test_some(self):
         xml = "<error>This babe is too hot</error>"
@@ -442,7 +451,8 @@ class TestSecurity(ut.TestCase):
         self.assertEqual(obj.sectype, 'SHARE')
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.market, 1)
-        self.assertEqual(obj.name, u"Газпром ао".encode('utf8').decode('cp1251'))
+        self.assertEqual(obj.name, u"Газпром ао".encode(
+            'utf8').decode('cp1251'))
         self.assertEqual(obj.decimals, 2)
         self.assertEqual(obj.minstep, .01)
         self.assertEqual(obj.lotsize, 1)
@@ -531,7 +541,8 @@ class TestClientPositions(ut.TestCase):
         self.assertEqual(obj.market, 1)
         self.assertEqual(obj.client, 'test/C282166')
         self.assertEqual(obj.seccode, 'GAZP')
-        self.assertEqual(obj.name, u"Газпром ао".encode('utf8').decode('cp1251'))
+        self.assertEqual(obj.name, u"Газпром ао".encode(
+            'utf8').decode('cp1251'))
         self.assertEqual(obj.saldo_in, 3)
         self.assertEqual(obj.saldo_min, 0)
         self.assertEqual(obj.bought, 0)
@@ -665,7 +676,6 @@ class TestSecInfo(ut.TestCase):
         self.assertEqual(obj.secname, '')
 
 
-
 class TestSecInfoUpd(ut.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -677,7 +687,6 @@ class TestSecInfoUpd(ut.TestCase):
         self.assertIsInstance(obj, SecInfoUpdate)
         self.assertEqual(obj.seccode, 'Eu86250BC0')
         self.assertEqual(obj.bgo_c, 5454.72)
-        
 
 
 @ut.skip('No data for mct portfolio')
