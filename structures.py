@@ -1332,4 +1332,4 @@ class UnitedPortfolio(MyXmlObject):
 
 
 _MY_CLASSES = list(filter(lambda o: inspect.isclass(o) and issubclass(o, (Entity, MyXmlObject)),
-                        sys.modules[__name__].__dict__.values()))
+                          sys.modules[__name__].__dict__.values()))
