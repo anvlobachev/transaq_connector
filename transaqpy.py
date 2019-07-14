@@ -54,9 +54,9 @@ class TransaqConnection():
         elif isinstance(obj, ss.CreditAbility):
             pass
         elif isinstance(obj, ss.ServerStatus):
+            status = 'Connected' if obj.connected else 'Disconnected'
             print(
-                f"SERVER STATUS CHANGED: \
-                    {'Connected' if obj.connected else 'Disconnected'}")
+                f"SERVER STATUS CHANGED: {status}")
             self.connected = obj.connected
         else:
             print(obj)
