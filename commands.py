@@ -22,18 +22,12 @@ log = logging.getLogger("transaq.connector")
 
 callback_func = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_char_p)
 global_handler = None
-path = ""
-if __file__ is not None:
-    path = os.path.dirname(__file__)
-    if path != "":
-        path += os.sep
-
 connected = False
 encoding = sys.stdout.encoding
 
 
 def load_dll():
-    dll_file = os.path.join(os.getcwd(), "txmlconnector64.dll" if platform.machine(
+    dll_file = os.path.join(os.path.dirname(__file__), "txmlconnector64.dll" if platform.machine(
     ) == 'AMD64' else 'txmlconnector.dll')
     dll = ctypes.WinDLL(dll_file)
 
@@ -157,7 +151,7 @@ def uninitialize():
         raise TransaqException(Error.parse(msg).text.encode(encoding))
 
 
-def connect(login, password, server, min_delay=100):
+def connect(login, password, server, min_delay=100) -> CmdResult:
     host, port = server.split(':')
     root = et.Element("command", {"id": "connect"})
     root.append(__elem("login", login))
