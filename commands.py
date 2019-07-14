@@ -99,9 +99,10 @@ class TransaqException(Exception):
 
 
 def __get_message(ptr):
-    # Достать сообщение из нативной памяти.
-    msg = ptr.decode('utf-8')
-    txml_dll.FreeMemory(ptr)
+    msg = ''
+    if ptr:
+        msg = ptr.decode('utf-8')
+    #txml_dll.FreeMemory(ptr)
     return msg
 
 
@@ -151,7 +152,7 @@ def uninitialize():
     if connected:
         disconnect()
     err = txml_dll.UnInitialize()
-    if err != 0:
+    if err:
         msg = __get_message(err)
         raise TransaqException(Error.parse(msg).text.encode(encoding))
 
