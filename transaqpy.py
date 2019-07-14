@@ -6,6 +6,7 @@ import commands as cmd
 import structures as ss
 import asyncio
 
+
 class TransaqConnection():
     """
     Transaq connection entity
@@ -14,7 +15,7 @@ class TransaqConnection():
     def __init__(self, logdir, loglevel=2):
         """
         :param logdir: log directory.
-        :param loglevel: level of logs from 1(minimum) to 3(maximum) 2 is default.
+        :param loglevel: level of logs 1(min) to 3(max) 2 is default.
         :logfile_lifetime: days how long log files lives.
         """
         self.connected = False
@@ -54,7 +55,8 @@ class TransaqConnection():
             pass
         elif isinstance(obj, ss.ServerStatus):
             print(
-                f"SERVER STATUS CHANGED: {'Connected' if obj.connected else 'Disconnected'}")
+                f"SERVER STATUS CHANGED: \
+                    {'Connected' if obj.connected else 'Disconnected'}")
             self.connected = obj.connected
         else:
             print(obj)

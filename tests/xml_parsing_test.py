@@ -314,7 +314,8 @@ class TestServerStatuses(ut.TestCase):
         obj = self.statuses[2]
         self.assertEqual(obj.id, None)
         self.assertEqual(obj.connected, "error")
-        expected_msg = u"Пользователь с таким идентификатором уже подключен к серверу"
+        expected_msg = u"Пользователь с таким идентификатором \
+                         уже подключен к серверу"
         self.assertEqual(obj.text, expected_msg.encode(
             'utf8').decode('cp1251'))
         self.assertEqual(obj.timezone, None)
@@ -403,7 +404,9 @@ class TestCmdResults(ut.TestCase):
         self.assertEqual(obj.success, True)
 
     def test_fail(self):
-        xml = u"<result success=\"false\"><message>Соединение не установлено...</message></result>"
+        xml = u"<result success=\"false\">\
+                <message>Соединение не установлено...</message>\
+                </result>"
         obj = parse(xml)
         self.assertEqual(obj.success, False)
         self.assertEqual(obj.text, u"Соединение не установлено...")

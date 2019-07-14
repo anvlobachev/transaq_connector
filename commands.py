@@ -7,7 +7,8 @@
     Практически все команды асинхронны!
     Это означает что они возвращают структуру CmdResult, которая говорит лишь
     об успешности отправки команды на сервер, но не её исполнения там.
-    Результат исполнения приходит позже в зарегистрированный командой *initialize()* хэндлер.
+    Результат исполнения приходит позже в зарегистрированный
+    командой *initialize()* хэндлер.
     Синхронные вспомогательные команды помечены отдельно.
 """
 import ctypes
@@ -27,8 +28,10 @@ encoding = sys.stdout.encoding
 
 
 def load_dll():
-    dll_file = os.path.join(os.path.dirname(__file__), "txmlconnector64.dll" if platform.machine(
-    ) == 'AMD64' else 'txmlconnector.dll')
+    dll_file = os.path.join(os.path.dirname(__file__),
+                            "txmlconnector64.dll"
+                            if platform.machine() == 'AMD64'
+                            else 'txmlconnector.dll')
     dll = ctypes.WinDLL(dll_file)
 
     dll.GetServiceInfo.argtypes = (ctypes.c_char_p, ctypes.c_char_p)
@@ -96,7 +99,7 @@ def __get_message(ptr):
     msg = ''
     if ptr:
         msg = ptr.decode('utf-8')
-    #txml_dll.FreeMemory(ptr)
+    # txml_dll.FreeMemory(ptr)
     return msg
 
 
@@ -236,8 +239,9 @@ def new_order(board, ticker, client, buysell, quantity, price=0,
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def new_stoploss(board, ticker, client, buysell, quantity, trigger_price, price=0,
-                 bymarket=True, usecredit=True, linked_order=None, valid_for=None):
+def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
+                 price=0, bymarket=True, usecredit=True,
+                 linked_order=None, valid_for=None):
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
     sec.append(__elem("board", board))
@@ -265,7 +269,8 @@ def new_stoploss(board, ticker, client, buysell, quantity, trigger_price, price=
 
 
 def new_takeprofit(board, ticker, client, buysell, quantity, trigger_price,
-                   correction=0, use_credit=True, linked_order=None, valid_for=None):
+                   correction=0, use_credit=True, linked_order=None,
+                   valid_for=None):
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
     sec.append(__elem("board", board))
@@ -347,12 +352,15 @@ def get_history(board, seccode, period, count, reset=True):
     :param count:
         Количество свечей.
     :param reset:
-        Параметр reset="true" говорит, что нужно выдавать самые свежие данные, в
-        противном случае будут выданы свечи в продолжение предыдущего запроса.
+        Параметр reset="true" говорит,
+        что нужно выдавать самые свежие данные,
+        в противном случае будут выданы свечи
+        в продолжение предыдущего запроса.
     :return:
         Результат отправки команды.
     """
-    return __send_command(get_history_xml(board, seccode, period, count, reset=True))
+    return __send_command(get_history_xml(board, seccode, period,
+                                          count, reset=True))
 
 
 # TODO Доделать условные заявки
@@ -409,7 +417,8 @@ def get_limits_forts(client):
 
 def get_servtime_diff():
     """
-    Получить разницу между серверным временем и временем на компьютере пользователя (синхронная).
+    Получить разницу между серверным временем и временем
+    на компьютере пользователя (синхронная).
 
     :return:
         Результат команды с разницей времени.
@@ -429,7 +438,9 @@ def change_pass(oldpass, newpass):
         Результат команды.
     """
     root = et.Element(
-        "command", {"id": "change_pass", "oldpass": oldpass, "newpass": newpass})
+        "command", {"id": "change_pass",
+                    "oldpass": oldpass,
+                    "newpass": newpass})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
@@ -441,7 +452,10 @@ def get_version():
         Версия коннектора.
     """
     root = et.Element("command", {"id": "get_connector_version"})
-    return ConnectorVersion.parse(__get_message(txml_dll.SendCommand(et.tostring(root, encoding="utf-8")))).version
+    return ConnectorVersion.parse(
+        __get_message(
+            txml_dll.SendCommand(
+                et.tostring(root, encoding="utf-8")))).version
 
 
 def get_sec_info(market, seccode):

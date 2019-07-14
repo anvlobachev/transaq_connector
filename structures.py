@@ -1,7 +1,8 @@
 """
 Модуль со структурными классами Transaq XML Коннектора.
 Всем основным xml структурам сопоставлены питоновые объекты.
-<a href="http://www.finam.ru/howtotrade/tconnector/">Документация коннектора</a>
+<a href="http://www.finam.ru/howtotrade/tconnector/">
+Документация коннектора</a>
 
 @author: Roma
 """
@@ -46,7 +47,8 @@ def parse(xml):
 class NullableDateTimeMapper(DateTimeMapper):
     """
     Оберточный класс вокруг DateTimeMapper,
-        возвращающий None для заданных значений, а не вываливающий исключение при обработке даты.
+    возвращающий None для заданных значений,
+    а не вываливающий исключение при обработке даты.
     """
     nones = ['0']
 
@@ -65,7 +67,8 @@ class NullableDateTimeMapper(DateTimeMapper):
 
 class MyXmlObject(XmlObject):
     """
-    Расширение eulxml.XmlObject с методом само-парсинга и наглядным представлением.
+    Расширение eulxml.XmlObject с методом само-парсинга
+    и наглядным представлением.
     """
 
     @classmethod
@@ -190,7 +193,8 @@ class ClientAccount(Entity):
     ROOT_NAME = 'client'
     id = StringField('@id')
     active = SimpleBooleanField('@remove', 'false', 'true')
-    # Возможные типы клиента: spot (кассовый), leverage (плечевой), margin_level (маржинальный)
+    # Возможные типы клиента: spot (кассовый),
+    # leverage (плечевой), margin_level (маржинальный)
     type = StringField('type', choices=('spot', 'leverage', 'mct'))
     # Валюта  фондового  портфеля
     currency = StringField('currency', choices=('NA', 'RUB', 'EUR', 'USD'))
@@ -404,7 +408,8 @@ class Quotation(Entity):
     last_time = DateTimeField('time', TIME_FORMAT)
     # Объем последней сделки, в лотах
     last_quantity = IntegerField('quantity')
-    # Изменение цены последней сделки по отношению к цене последней сделки предыдущего торгового дня
+    # Изменение цены последней сделки по отношению к цене
+    # последней сделки предыдущего торгового дня
     change = FloatField('change')
     # Цена последней сделки к оценке предыдущего дня
     change_wa = FloatField('priceminusprevwaprice')
@@ -1331,5 +1336,6 @@ class UnitedPortfolio(MyXmlObject):
     assets = NodeListField('asset', _Asset)
 
 
-_MY_CLASSES = list(filter(lambda o: inspect.isclass(o) and issubclass(o, (Entity, MyXmlObject)),
+_MY_CLASSES = list(filter(lambda o: inspect.isclass(o) and
+                          issubclass(o, (Entity, MyXmlObject)),
                           sys.modules[__name__].__dict__.values()))
