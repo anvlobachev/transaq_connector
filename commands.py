@@ -12,13 +12,13 @@
     Синхронные вспомогательные команды помечены отдельно.
 """
 import ctypes
-import logging
-import platform
 import os
-import sys
+import platform
+
 import lxml.etree as et
 
-from structures import *
+from .structures import *
+
 log = logging.getLogger("transaq.connector")
 
 callback_func = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_char_p)
@@ -78,7 +78,7 @@ def callback(msg):
     elif isinstance(obj, ServerStatus):
         log.info("Connected to server: %s" % obj.connected)
         if obj.connected == 'error':
-            log.warn("Connection error: %s" % obj.text)
+            log.warning("Connection error: %s" % obj.text)
         log.debug(obj)
     else:
         log.info("Received object type %s" % str(type(obj)))
@@ -183,6 +183,20 @@ def get_instruments():
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
+def subscribe_ticks(tickers):
+    root = et.Element("command", {"id": 'subscribe_ticks'})
+    for t in tickers:
+        item = et.Element('security')
+        item.append(__elem("board", t[0]))
+        item.append(__elem("seccode", t[1]))
+        no = tickers.get(t)
+        if no is None:
+            no = 0
+        item.append(__elem("tradeno", str(no)))
+        root.append(item)
+        root.append(__elem("filter", "false"))
+    return __send_command(et.tostring(root, encoding="utf-8"))
+
 def __subscribe_helper(board, tickers, cmd, mode):
     root = et.Element("command", {"id": cmd})
     trades = et.Element(mode)
@@ -195,11 +209,10 @@ def __subscribe_helper(board, tickers, cmd, mode):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def subscribe_ticks(board, tickers):
+def subscribe_trades(board, tickers):
     return __subscribe_helper(board, tickers, "subscribe", "alltrades")
 
-
-def unsubscribe_ticks(board, tickers):
+def unsubscribe_trades(board, tickers):
     return __subscribe_helper(board, tickers, "unsubscribe", "alltrades")
 
 
@@ -360,7 +373,7 @@ def get_history(board, seccode, period, count, reset=True):
         Результат отправки команды.
     """
     return __send_command(get_history_xml(board, seccode, period,
-                                          count, reset=True))
+                                          count, reset))
 
 
 # TODO Доделать условные заявки
