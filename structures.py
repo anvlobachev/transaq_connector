@@ -195,7 +195,7 @@ class ClientAccount(Entity):
     active = SimpleBooleanField('@remove', 'false', 'true')
     # Возможные типы клиента: spot (кассовый),
     # leverage (плечевой), margin_level (маржинальный)
-    type = StringField('type', choices=('spot', 'leverage', 'mct'))
+    type = StringField('type', choices=('spot', 'leverage', 'margin_level', 'mct'))
     # Валюта  фондового  портфеля
     currency = StringField('currency', choices=('NA', 'RUB', 'EUR', 'USD'))
     # Идентификатор рынка
@@ -205,6 +205,8 @@ class ClientAccount(Entity):
     # счет FORTS клиента
     forts_acc = StringField('forts_acc')
 
+    def __str__(self):
+        return id
 
 class Market(Entity):
     """
@@ -1029,7 +1031,7 @@ class HistoryTick(Trade):
     """
     ROOT_NAME = 'tick'
     secid = IntegerField('secid')
-    time = DateTimeField('trade_time', TIME_FORMAT)
+    time = DateTimeField('tradetime', TIME_FORMAT)
 
 
 class HistoryTickPacket(Packet):
