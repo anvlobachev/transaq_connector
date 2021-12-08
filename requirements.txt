@@ -1,6 +1,7 @@
 autopep8
 eulxml
 lxml
+ply
 pycodestyle
 six
 tabulate
