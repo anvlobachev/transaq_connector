@@ -131,6 +131,14 @@ class CmdResult(MyXmlObject):
     id = IntegerField('@transactionid')
 
 
+class TimeDiffResult(MyXmlObject):
+    """
+    Результат запроса разницы локального времени и времени сервера.
+    """
+    ROOT_NAME = 'result'
+    success = SimpleBooleanField('@success', 'true', 'false')
+    diff = IntegerField('@diff')
+
 # Классы xml структур Транзака
 
 class HistoryCandle(Entity):

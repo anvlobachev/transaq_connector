@@ -178,6 +178,16 @@ def server_status():
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
+def get_time_difference():
+    root = et.Element("command", {"id": "get_servtime_difference"})
+    msg = __get_message(txml_dll.SendCommand(et.tostring(root, encoding="utf-8")))
+    err = Error.parse(msg)
+    if err.text:
+        raise TransaqException(err.text.encode(encoding))
+    else:
+        return TimeDiffResult.parse(msg)
+
+
 def get_instruments():
     root = et.Element("command", {"id": "get_securities"})
     return __send_command(et.tostring(root, encoding="utf-8"))
