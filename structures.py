@@ -194,6 +194,15 @@ class ServerStatus(Entity):
             return "ServerStatus(ERROR, text=%s)" % self.text
 
 
+class Union(Entity):
+    """
+    Единый Портфель (юнион).
+    """
+    ROOT_NAME = "union"
+    id = StringField('@id')
+    active = SimpleBooleanField('@remove', 'false', 'true')
+
+
 class ClientAccount(Entity):
     """
     Данные клиентсткого аккаунта.
@@ -751,6 +760,8 @@ class ClientPosition(Entity):
     client = StringField('client')
     # Внутренний код рынка
     market = IntegerField('market')
+    # Идентификатор портфеля
+    union = StringField('union')
     # Регистр учета
     register = StringField('register')
     # Наименование вида средств
