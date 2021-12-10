@@ -273,6 +273,8 @@ class Security(Entity):
     minstep = FloatField('minstep')
     # Размер лота
     lotsize = IntegerField('lotsize')
+    # Делитель лота
+    lotdivider = IntegerField('lotdivider')
     # Стоимость пункта цены
     point_cost = FloatField('point_cost')
     # Имя таймзоны инструмента
@@ -1089,6 +1091,7 @@ class SecurityPit(MyXmlObject):
     decimals = IntegerField('decimals')
     minstep = FloatField('minstep')
     lotsize = IntegerField('lotsize')
+    lotdivider = IntegerField('lotdivider')
     point_cost = FloatField('point_cost')
 
 
