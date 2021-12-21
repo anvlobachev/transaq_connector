@@ -203,6 +203,27 @@ class Union(Entity):
     active = SimpleBooleanField('@remove', 'false', 'true')
 
 
+class UnitedEquity(Entity):
+    """
+    Актуальная оценка ликвидационной стоимости Единого портфеля.
+    """
+    ROOT_NAME = "united_equity"
+    id = StringField('@union')
+    # Текущая оценка стоимости единого портфеля
+    equity = FloatField('equity')
+
+
+class UnitedGo(Entity):
+    """
+    Размер средств, заблокированных биржей (FORTS) под
+    срочные позиции клиентов юниона
+    """
+    ROOT_NAME = "united_go"
+    id = StringField('@union')
+    # Размер требуемого ГО, посчитанный биржей FORTS
+    go = FloatField('go')
+
+
 class ClientAccount(Entity):
     """
     Данные клиентсткого аккаунта.
@@ -211,7 +232,8 @@ class ClientAccount(Entity):
     id = StringField('@id')
     active = SimpleBooleanField('@remove', 'false', 'true')
     # Возможные типы клиента: spot (кассовый),
-    # leverage (плечевой), margin_level (маржинальный)
+    # leverage (плечевой), margin_level (маржинальный),
+    # mct (клиент ММА)
     type = StringField('type', choices=('spot', 'leverage', 'margin_level', 'mct'))
     # Валюта  фондового  портфеля
     currency = StringField('currency', choices=('NA', 'RUB', 'EUR', 'USD'))
@@ -224,6 +246,7 @@ class ClientAccount(Entity):
 
     def __str__(self):
         return id
+
 
 class Market(Entity):
     """
@@ -752,16 +775,22 @@ class ClientTradePacket(Packet):
     items = NodeListField('trade', ClientTrade)
 
 
-class ClientPosition(Entity):
+class ClientPositionBase(Entity):
     """
-    Базовый класс позиции по инструменту.
+    Базовый класс позиции.
     """
     # Идентификатор клиента
     client = StringField('client')
-    # Внутренний код рынка
-    market = IntegerField('market')
     # Идентификатор портфеля
     union = StringField('union')
+
+
+class ClientPosition(ClientPositionBase):
+    """
+    Базовый класс позиции MOEX.
+    """
+    # Внутренний код рынка
+    market = IntegerField('market')
     # Регистр учета
     register = StringField('register')
     # Наименование вида средств
@@ -785,13 +814,17 @@ class ClientPosition(Entity):
 class MoneyPosition(ClientPosition):
     """Денежная позиция"""
     ROOT_NAME = 'money_position'
-    id = -1
-    # Внутренний коды доступных рынков
+    #  Код актива
+    id = asset = StringField('asset')
+    # Код валюты
+    currency = StringField("currency")
+    # Внутренние коды доступных рынков
     market = IntegerListField('markets/market')
     # В условных заявках на покупку
     order_buy_cond = FloatField('ordbuycond')
     # Сумма списанной комиссии
     commission = FloatField('comission')
+    # В заявках на продажу - отсутствует
     ord_sell = 0
 
 
@@ -804,27 +837,104 @@ class SecurityPosition(ClientPosition):
     seccode = asset = StringField('seccode')
     # Неснижаемый остаток
     saldo_min = FloatField('saldomin')
+    # Текущая оценка стоимости позиции, в валюте
+    # инструмента
+    amount = FloatField('amount')
+    # Текущая оценка стоимости позиции, в рублях
+    equity = FloatField('equity')
 
 
-# TODO Дописать позиции фортс
-class ClientPositionForts(Entity):
+class FortsClientPosition(ClientPositionBase):
+    """
+    Базовый класс позиции FORTS.
+    """
+    # Внутренние коды доступных рынков
+    markets = IntegerListField('markets/market')
+    # Наименование вида средств
+    name = StringField('shortname')
+
+
+class FortsSecurityPosition(FortsClientPosition):
     """Клиентская позиция ФОРТС"""
-    pass
+    ROOT_NAME = "forts_position"
+    # Код инструмента
+    id = secid = IntegerField('secid')
+    # Код инструмента
+    seccode = StringField('seccode')
+    # Входящая позиция по инструменту
+    startnet = IntegerField('startnet')
+    # В заявках на покупку
+    openbuys = IntegerField('openbuys')
+    # В заявках на продажу
+    opensells = IntegerField('opensells')
+    # Текущая позиция по инструменту
+    totalnet = IntegerField('totalnet')
+    # Куплено
+    todaybuy = IntegerField('todaybuy')
+    # Продано
+    todaysell = IntegerField('todaysell')
+    # Маржа для маржируемых опционов
+    optmargin = FloatField('optmargin')
+    # Вариационная маржа
+    varmargin = FloatField('varmargin')
+    # Опционов в заявках на  исполнение
+    expirationpos = IntegerField('expirationpos')
+    # Объем использованого спот-лимита на продажу
+    usedsellspotlimit = FloatField('usedsellspotlimit')
+    # Текущий спот-лимит на продажу, установленный Брокером
+    sellspotlimit = FloatField('sellspotlimit')
+    # Нетто-позиция по всем инструментам данного спота
+    netto = FloatField('netto')
+    # Коэффициент ГО для спота
+    kgo = FloatField('kgo')
 
 
-class ClientMoneyForts(ClientPositionForts):
+class FortsCollaterals(FortsClientPosition):
+    """Обеспечение FORTS"""
+    ROOT_NAME = "forts_collaterals"
+    # Текущие<
+    current = FloatField('current')
+    # Заблокировано<
+    blocked = FloatField('blocked')
+    # Свободные
+    free = FloatField('free')
+
+
+class FortsMoneyPosition(FortsCollaterals):
     """Денежная позиция ФОРТС"""
-    pass
+    ROOT_NAME = "forts_money"
+    # Опер. маржа
+    varmargin = FloatField("varmargin")
 
 
-class SpotLimits(ClientPositionForts):
+class SpotLimits(FortsClientPosition):
     """Спот лимиты ФОРТС"""
-    pass
+    ROOT_NAME = "spot_limit"
+    # Текущий лимит
+    buy_limit = FloatField('buylimit')
+    # Заблокировано лимита
+    buy_limit_used = FloatField('buylimitused')
 
 
-class FortCollaterals(ClientPositionForts):
-    """ФОРТС Коллатералс(?)"""
-    pass
+class UnitedLimitsUpdate(Entity):
+    '''Оценка портфеля'''
+    ROOT_NAME = "united_limits"
+    # Код портфеля
+    id = union = StringField("@union")
+    # Входящая оценка стоимости единого портфеля
+    open_equity = FloatField("open_equity")
+    # Текущая оценка стоимости единого портфеля
+    equity = FloatField("equity")
+    # Начальные требования
+    requirements = FloatField("requirements")
+    # Свободные средства
+    free = FloatField("free")
+    # Вариационная маржа FORTS
+    vm = FloatField("vm")
+    # Финансовый результат последнего клиринга FORTS
+    finres = FloatField("finres")
+    # Размер требуемого ГО, посчитанный биржей FORTS
+    go = FloatField("go")
 
 
 class PositionPacket(Packet):
@@ -840,10 +950,20 @@ class PositionPacket(Packet):
         root = parseString(xml)
         assert root.tag == PositionPacket.ROOT_NAME
         for child in root:
-            if child.tag == 'money_position':
+            if child.tag == MoneyPosition.ROOT_NAME:
                 result.items.append(MoneyPosition(child))
-            elif child.tag == 'sec_position':
+            elif child.tag == SecurityPosition.ROOT_NAME:
                 result.items.append(SecurityPosition(child))
+            elif child.tag == FortsSecurityPosition.ROOT_NAME:
+                result.items.append(FortsSecurityPosition(child))
+            elif child.tag == FortsCollaterals.ROOT_NAME:
+                result.items.append(FortsCollaterals(child))
+            elif child.tag == FortsMoneyPosition.ROOT_NAME:
+                result.items.append(FortsMoneyPosition(child))
+            elif child.tag == SpotLimits.ROOT_NAME:
+                result.items.append(SpotLimits(child))
+            elif child.tag == UnitedLimitsUpdate.ROOT_NAME:
+                result.items.append(UnitedLimitsUpdate(child))
         return result
 
 
@@ -1160,37 +1280,37 @@ class TextMessagePacket(Packet):
     items = NodeListField('message', TextMessage)
 
 
-class ClientPortfolioMCT(MyXmlObject):
-    """
-    Клиентский портфель MCT/MMA.
-    """
-    ROOT_NAME = 'portfolio_mct'
-    # Идентификатор клиента
-    id = client = StringField('@client')
-    # Валюта портфеля клиента
-    currency = StringField('portfolio_currency')
-    # Величина капитала
-    capital = FloatField('capital')
-    # Использование капитала факт
-    utilization_fact = FloatField('utilization_fact')
-    # Использование капитала план
-    utilization_plan = FloatField('utilization_plan')
-    # Фактическая обеспеченность
-    coverage_fact = FloatField('coverage_fact')
-    # Плановая обеспеченность
-    coverage_plan = FloatField('coverage_plan')
-    # Входящее сальдо
-    open_balance = FloatField('open_balance')
-    # Cуммарная комиссия
-    tax = FloatField('tax')
-    # Прибыль/убыток по входящим позициям
-    pnl_income = FloatField('pnl_income')
-    # Прибыль/убыток по сделкам
-    pnl_intraday = FloatField('pnl_intraday')
-
-    # TODO Доделать портфель mct
-    class _Security(MyXmlObject):
-        pass
+# class ClientPortfolioMCT(MyXmlObject):
+#     """
+#     Клиентский портфель MCT/MMA.
+#     """
+#     ROOT_NAME = 'portfolio_mct'
+#     # Идентификатор клиента
+#     id = client = StringField('@client')
+#     # Валюта портфеля клиента
+#     currency = StringField('portfolio_currency')
+#     # Величина капитала
+#     capital = FloatField('capital')
+#     # Использование капитала факт
+#     utilization_fact = FloatField('utilization_fact')
+#     # Использование капитала план
+#     utilization_plan = FloatField('utilization_plan')
+#     # Фактическая обеспеченность
+#     coverage_fact = FloatField('coverage_fact')
+#     # Плановая обеспеченность
+#     coverage_plan = FloatField('coverage_plan')
+#     # Входящее сальдо
+#     open_balance = FloatField('open_balance')
+#     # Cуммарная комиссия
+#     tax = FloatField('tax')
+#     # Прибыль/убыток по входящим позициям
+#     pnl_income = FloatField('pnl_income')
+#     # Прибыль/убыток по сделкам
+#     pnl_intraday = FloatField('pnl_intraday')
+#
+#     # TODO Доделать портфель mct
+#     class _Security(MyXmlObject):
+#         pass
 
 
 class NewsHeader(MyXmlObject):
@@ -1213,53 +1333,101 @@ class NewsBody(MyXmlObject):
     text = StringField('text')
 
 
-class UnitedPortfolio(MyXmlObject):
+class MultiPortfolio(MyXmlObject):
     """
-    Клиентский единый портфель.
+    Клиентский мультивалютный портфель.
     """
-    ROOT_NAME = 'united_portfolio'
+    ROOT_NAME = 'mc_portfolio'
     # Идентификатор клиента
     id = client = StringField('@client')
+    # Код портфеля
+    union = StringField('@union')
     # Входящая оценка единого портфеля
     open_equity = FloatField('open_equity')
     # Текущая оценка единого портфеля
     equity = FloatField('equity')
-    # Корреляционный вычет планового риска
-    chrgoff_ir = FloatField('chrgoff_ir')
-    # Плановый риск (размер начальных требований)
-    init_req = FloatField('init_req')
-    # Корреляционный вычет минимальных требований
-    chrgoff_mr = FloatField('chrgoff_mr')
-    # Размер минимальных требований
-    maint_req = FloatField('maint_req')
-    # Стоимость портфеля нормативная
-    reg_equity = FloatField('reg_equity')
-    # Плановая начальная маржа нормативная
-    reg_ir = FloatField('reg_ir')
-    # Минимальная маржа нормативная
-    reg_mr = FloatField('reg_mr')
-    # Вариационная маржа FORTS
-    vm = FloatField('vm')
-    # Финансовый результат последнего клиринга FORTS
-    finres = FloatField('finres')
+    # Прибыль/убыток общий
+    pl = FloatField('pl')
     # Размер требуемого ГО, посчитанный биржей FORTS
     go = FloatField('go')
+    # Плановый размер обеспечения
+    cover = FloatField('cover')
+    # Плановый риск (размер начальных требований)
+    init_req = FloatField('init_req')
+    # Размер минимальных требований
+    maint_req = FloatField('maint_req')
+    # Нереализов. прибыль/убыток
+    unrealized_pnl = FloatField('unrealized_pnl')
+    # # Корреляционный вычет планового риска
+    # chrgoff_ir = FloatField('chrgoff_ir')
+    # # Корреляционный вычет минимальных требований
+    # chrgoff_mr = FloatField('chrgoff_mr')
+    # # Стоимость портфеля нормативная
+    # reg_equity = FloatField('reg_equity')
+    # # Плановая начальная маржа нормативная
+    # reg_ir = FloatField('reg_ir')
+    # # Минимальная маржа нормативная
+    # reg_mr = FloatField('reg_mr')
+    # # Вариационная маржа FORTS
+    # vm = FloatField('vm')
+    # # Финансовый результат последнего клиринга FORTS
+    # finres = FloatField('finres')
+
+    class _Currency(MyXmlObject):
+        # Код валюты
+        id = currency = StringField("@currency")
+        # Кросс-курс
+        cross_rate = FloatField('cross_rate')
+        # Входящая денежная позиция
+        open_balance = FloatField('open_balance')
+        # Текущая денежная позиция
+        balance = FloatField('balance')
+        # Оценка текущей стоимости
+        equity = FloatField('equity')
+        # Вклад в плановое обеспечение
+        cover = FloatField('cover')
+        # Плановый риск
+        init_req = FloatField('init_req')
+        # Минимальные требования
+        maint_req = FloatField('maint_req')
+        # Нереализованная прибыль/убыток
+        unrealized_pnl = FloatField('unrealized_pnl')
+
+    currencies = NodeListField('portfolio_currency', _Currency)
 
     class _Money(MyXmlObject):
         # Наименование денежного раздела
         name = StringField('@name')
+        # Код валюты
+        currency = StringField('@currency')
+        # Код базового актива
+        asset = StringField('asset')
+        # Балансовая цена инвалютной денежной
+        # позиции,руб
+        balance_prc = FloatField('balance_prc')
         # Входящая денежная позиция
         open_balance = FloatField('open_balance')
         # Затрачено на покупки
         bought = FloatField('bought')
         # Выручено от продаж
         sold = FloatField('sold')
-        # Исполнено
-        settled = FloatField('settled')
+        # # Исполнено
+        # settled = FloatField('settled')
         # Текущая денежная позиция
         balance = FloatField('balance')
-        # Уплачено комиссии
-        tax = FloatField('tax')
+        # Сумма плановых покупок
+        blocked = FloatField('blocked')
+        # Сумма плановых продаж
+        estimated = FloatField('estimated')
+        # Удержано комиссии
+        fee = FloatField('fee')
+        # Вариационная маржа [FORTS или
+        # фьючерсы MMA]
+        vm = FloatField('vm')
+        # Фин. результат последнего клиринга [ФОРТС]
+        finres = FloatField('finres')
+        # Вклад в плановое обеспечение
+        cover = FloatField('cover')
 
         class _ValuePart(MyXmlObject):
             # Регистр учёта
@@ -1270,10 +1438,14 @@ class UnitedPortfolio(MyXmlObject):
             bought = FloatField('bought')
             # Выручка от продаж
             sold = FloatField('sold')
-            # Исполнено
-            settled = FloatField('settled')
+            # # Исполнено
+            # settled = FloatField('settled')
             # Текущая денежная позиция
             balance = FloatField('balance')
+            # Сумма плановых покупок
+            blocked = FloatField('blocked')
+            # Сумма плановых продаж
+            estimated = FloatField('estimated')
 
         value_parts = NodeListField('value_part', _ValuePart)
 
@@ -1284,6 +1456,20 @@ class UnitedPortfolio(MyXmlObject):
         code = StringField('@code')
         # Наименование базового актива
         name = StringField('@name')
+        # Код валюты
+        currency = StringField('currency')
+        # Стоимость входящей позиции
+        open_balance = FloatField('open_balance')
+        # Потрачено на покупки
+        bought = FloatField('bought')
+        # Выручка от продаж
+        sold = FloatField('sold')
+        # Стоимость текущей позиция
+        balance = FloatField('balance')
+        # Сумма плановых покупок
+        blocked = FloatField('blocked')
+        # Сумма плановых продаж
+        estimated = FloatField('estimated')
         # Ставка перекрытия
         setoff_rate = FloatField('setoff_rate')
         # Плановый риск
@@ -1291,73 +1477,87 @@ class UnitedPortfolio(MyXmlObject):
         # Минимальная маржа
         maint_req = FloatField('maint_req')
 
-        class _Security(MyXmlObject):
-            # Id инструмента
-            secid = IntegerField('@secid')
-            # Id рынка
-            market = IntegerField('market')
-            # Обозначение инструмента
-            seccode = StringField('seccode')
-            # Текущая цена
-            price = FloatField('price')
+    assets = NodeListField('asset', _Asset)
+
+    class _Security(MyXmlObject):
+        # Id инструмента
+        secid = IntegerField('@secid')
+        # Id рынка
+        market = IntegerField('market')
+        # Обозначение инструмента
+        seccode = StringField('seccode')
+        # Код базового актива
+        asset = StringField('asset')
+        # Код валюты
+        currency = StringField('currency')
+        # Входящая цена
+        price_in = FloatField('price_in')
+        # Текущая цена
+        price = FloatField('price')
+        # Входящая нетто-позиция, штук
+        open_balance = IntegerField('open_balance')
+        # Куплено, штук
+        bought = IntegerField('bought')
+        # Продано, штук
+        sold = IntegerField('sold')
+        # Текущая нетто-позиция, штук
+        balance = IntegerField('balance')
+        # Балансовая цена
+        balance_prc = FloatField('balance_prc')
+        # Нереализов. прибыль/убыток
+        unrealized_pnl = FloatField('unrealized_pnl')
+        # Заявлено купить, штук
+        buying = IntegerField('buying')
+        # Заявлено продать, штук
+        selling = IntegerField('selling')
+        # Оценка текущей стоимости
+        equity = FloatField('equity')
+        # Вклад в плановое обеспечение
+        cover = FloatField('cover')
+        # # Стоимость в обеспечении портфеля нормативная
+        # reg_equity = FloatField('reg_equity')
+        # Cтавка риска для лонгов, %
+        riskrate_long = FloatField('riskrate_long')
+        # Cтавка риска для шортов, %
+        riskrate_short = FloatField('riskrate_short')
+        # Ставка резерва для лонгов, %
+        reserate_long = FloatField('reserate_long')
+        # Ставка резерва для шортов, %
+        reserate_short = FloatField('reserate_short')
+        # Прибыль/убыток общий
+        pl = FloatField('pl')
+        # Прибыль/убыток по входящим позициям
+        pnl_income = FloatField('pnl_income')
+        # Прибыль/убыток по сделкам
+        pnl_intraday = FloatField('pnl_intraday')
+        # Максимальная покупка, в лотах
+        max_buy = IntegerField('maxbuy')
+        # Макcимальная продажа, в лотах
+        max_sell = IntegerField('maxsell')
+        # Индивидуальный шорт-лимит
+        borrowed = IntegerField('borrowed')
+
+        class _ValuePart(MyXmlObject):
+            # Входящая позиция, штук
+            register = StringField('@register')
             # Входящая позиция, штук
             open_balance = IntegerField('open_balance')
             # Куплено, штук
             bought = IntegerField('bought')
             # Продано, штук
             sold = IntegerField('sold')
+            # # Исполнено
+            # settled = IntegerField('settled')
             # Текущая позиция, штук
             balance = IntegerField('balance')
             # Заявлено купить, штук
             buying = IntegerField('buying')
             # Заявлено продать, штук
             selling = IntegerField('selling')
-            # Оценка (в составе обеспечения ЕП)
-            equity = FloatField('equity')
-            # Стоимость в обеспечении портфеля нормативная
-            reg_equity = FloatField('reg_equity')
-            # Cтавка риска для лонгов, %
-            riskrate_long = FloatField('riskrate_long')
-            # Cтавка риска для шортов, %
-            riskrate_short = FloatField('riskrate_short')
-            # Ставка резерва для лонгов, %
-            reserate_long = FloatField('reserate_long')
-            # Ставка резерва для шортов, %
-            reserate_short = FloatField('reserate_short')
-            # Прибыль/убыток общий
-            pl = FloatField('pl')
-            # Прибыль/убыток по входящим позициям
-            pnl_income = FloatField('pnl_income')
-            # Прибыль/убыток по сделкам
-            pnl_intraday = FloatField('pnl_intraday')
-            # Максимальная покупка, в лотах
-            max_buy = IntegerField('maxbuy')
-            # Макcимальная продажа, в лотах
-            max_sell = IntegerField('maxsell')
 
-            class _ValuePart(MyXmlObject):
-                # Входящая позиция, штук
-                register = StringField('@register')
-                # Входящая позиция, штук
-                open_balance = IntegerField('open_balance')
-                # Куплено, штук
-                bought = IntegerField('bought')
-                # Продано, штук
-                sold = IntegerField('sold')
-                # Исполнено
-                settled = IntegerField('settled')
-                # Текущая позиция, штук
-                balance = IntegerField('balance')
-                # Заявлено купить, штук
-                buying = IntegerField('buying')
-                # Заявлено продать, штук
-                selling = IntegerField('selling')
+        value_parts = NodeListField('value_part', _ValuePart)
 
-            value_parts = NodeListField('value_part', _ValuePart)
-
-        securities = NodeListField('security', _Security)
-
-    assets = NodeListField('asset', _Asset)
+    securities = NodeListField('security', _Security)
 
 
 _MY_CLASSES = list(filter(lambda o: inspect.isclass(o) and

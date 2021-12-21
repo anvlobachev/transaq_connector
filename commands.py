@@ -154,31 +154,38 @@ def uninitialize():
         raise TransaqException(Error.parse(msg).text.encode(encoding))
 
 
-def connect(login, password, server, min_delay=100) -> CmdResult:
+def connect(login, password, server, min_delay=100,
+            micex_registers=True, push_u_limits=10, push_p_equity=10) -> CmdResult:
     host, port = server.split(':')
     root = et.Element("command", {"id": "connect"})
     root.append(__elem("login", login))
     root.append(__elem("password", password))
     root.append(__elem("host", host))
     root.append(__elem("port", port))
+    if micex_registers:
+        root.append(__elem("micex_registers", "true"))
     root.append(__elem("rqdelay", str(min_delay)))
+    if push_u_limits > 0:
+        root.append(__elem("push_u_limits", str(push_u_limits)))
+    if push_p_equity > 0:
+        root.append(__elem("push_pos_equity", str(push_p_equity)))
     cmd = et.tostring(root, encoding="utf-8")
     return __send_command(cmd)
 
 
-def disconnect():
+def disconnect() -> CmdResult:
     global connected
     root = et.Element("command", {"id": "disconnect"})
     return __send_command(et.tostring(root, encoding="utf-8"))
     # connected = False
 
 
-def server_status():
+def server_status() -> CmdResult:
     root = et.Element("command", {"id": "server_status"})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_time_difference():
+def get_time_difference() -> TimeDiffResult:
     root = et.Element("command", {"id": "get_servtime_difference"})
     msg = __get_message(txml_dll.SendCommand(et.tostring(root, encoding="utf-8")))
     err = Error.parse(msg)
@@ -188,12 +195,12 @@ def get_time_difference():
         return TimeDiffResult.parse(msg)
 
 
-def get_instruments():
-    root = et.Element("command", {"id": "get_securities"})
-    return __send_command(et.tostring(root, encoding="utf-8"))
+# def get_instruments():
+#     root = et.Element("command", {"id": "get_securities"})
+#     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def subscribe_ticks(tickers):
+def subscribe_ticks(tickers) -> CmdResult:
     root = et.Element("command", {"id": 'subscribe_ticks'})
     for t in tickers:
         item = et.Element('security')
@@ -207,6 +214,7 @@ def subscribe_ticks(tickers):
         root.append(__elem("filter", "false"))
     return __send_command(et.tostring(root, encoding="utf-8"))
 
+
 def __subscribe_helper(board, tickers, cmd, mode):
     root = et.Element("command", {"id": cmd})
     trades = et.Element(mode)
@@ -219,31 +227,31 @@ def __subscribe_helper(board, tickers, cmd, mode):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def subscribe_trades(board, tickers):
+def subscribe_alltrades(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "subscribe", "alltrades")
 
-def unsubscribe_trades(board, tickers):
+def unsubscribe_alltrades(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "unsubscribe", "alltrades")
 
 
-def subscribe_quotations(board, tickers):
+def subscribe_quotations(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "subscribe", "quotations")
 
 
-def unsubscribe_quotations(board, tickers):
+def unsubscribe_quotations(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "unsubscribe", "quotations")
 
 
-def subscribe_bidasks(board, tickers):
+def subscribe_bidasks(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "subscribe", "quotes")
 
 
-def unsubscribe_bidasks(board, tickers):
+def unsubscribe_bidasks(board, tickers) -> CmdResult:
     return __subscribe_helper(board, tickers, "unsubscribe", "quotes")
 
 
 def new_order(board, ticker, client, buysell, quantity, price=0,
-              bymarket=True, usecredit=True):
+              bymarket=True, usecredit=True) -> CmdResult:
     # Add hidden, unfilled, nosplit
     root = et.Element("command", {"id": "neworder"})
     sec = et.Element("security")
@@ -264,7 +272,7 @@ def new_order(board, ticker, client, buysell, quantity, price=0,
 
 def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
                  price=0, bymarket=True, usecredit=True,
-                 linked_order=None, valid_for=None):
+                 linked_order=None, valid_for=None) -> CmdResult:
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
     sec.append(__elem("board", board))
@@ -293,7 +301,7 @@ def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
 
 def new_takeprofit(board, ticker, client, buysell, quantity, trigger_price,
                    correction=0, use_credit=True, linked_order=None,
-                   valid_for=None):
+                   valid_for=None) -> CmdResult:
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
     sec.append(__elem("board", board))
@@ -318,28 +326,28 @@ def new_takeprofit(board, ticker, client, buysell, quantity, trigger_price,
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def cancel_order(id):
+def cancel_order(id) -> CmdResult:
     root = et.Element("command", {"id": "cancelorder"})
     root.append(__elem("transactionid", str(id)))
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def cancel_stoploss(id):
+def cancel_stoploss(id) -> CmdResult:
     root = et.Element("command", {"id": "cancelstoporder"})
     root.append(__elem("transactionid", str(id)))
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def cancel_takeprofit(id):
-    cancel_stoploss(id)
+def cancel_takeprofit(id) -> CmdResult:
+    return cancel_stoploss(id)
 
 
-def get_portfolio(client):
-    root = et.Element("command", {"id": "get_portfolio", "client": client})
-    return __send_command(et.tostring(root, encoding="utf-8"))
+# def get_portfolio(client):
+#     root = et.Element("command", {"id": "get_portfolio", "client": client})
+#     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_markets():
+def get_markets() -> CmdResult:
     """
     Получить список рынков.
 
@@ -350,7 +358,7 @@ def get_markets():
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_history_xml(board, seccode, period, count, reset=True):
+def get_history_xml(board, seccode, period, count, reset=True) -> CmdResult:
     root = et.Element("command", {"id": "gethistorydata"})
     sec = et.Element("security")
     sec.append(__elem("board", board))
@@ -362,7 +370,7 @@ def get_history_xml(board, seccode, period, count, reset=True):
     return et.tostring(root, encoding="utf-8")
 
 
-def get_history(board, seccode, period, count, reset=True):
+def get_history(board, seccode, period, count, reset=True) -> CmdResult:
     """
     Выдать последние N свечей заданного периода, по заданному инструменту.
 
@@ -411,7 +419,7 @@ def new_condorder(board, ticker, client, buysell, quantity, price,
     return NotImplemented
 
 
-def get_forts_position(client):
+def get_forts_position(client) -> CmdResult:
     """
     Запрос позиций клиента по FORTS.
 
@@ -425,7 +433,7 @@ def get_forts_position(client):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_limits_forts(client):
+def get_limits_forts(client) -> CmdResult:
     """
     Запрос лимитов клиента ФОРТС.
 
@@ -438,18 +446,7 @@ def get_limits_forts(client):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_servtime_diff():
-    """
-    Получить разницу между серверным временем и временем
-    на компьютере пользователя (синхронная).
-
-    :return:
-        Результат команды с разницей времени.
-    """
-    return NotImplemented
-
-
-def change_pass(oldpass, newpass):
+def change_pass(oldpass, newpass) -> CmdResult:
     """
     Смена пароля (синхронная).
 
@@ -467,7 +464,7 @@ def change_pass(oldpass, newpass):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_version():
+def get_version() -> ConnectorVersion:
     """
     Получить версию коннектора (синхронная).
 
@@ -481,7 +478,7 @@ def get_version():
                 et.tostring(root, encoding="utf-8")))).version
 
 
-def get_sec_info(market, seccode):
+def get_sec_info(market, seccode) -> CmdResult:
     """
     Запрос на получение информации по инструменту.
 
@@ -500,7 +497,7 @@ def get_sec_info(market, seccode):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def move_order(id, price, quantity=0, moveflag=0):
+def move_order(id, price, quantity=0, moveflag=0) -> CmdResult:
     """
     Отредактировать заявку.
 
@@ -525,42 +522,85 @@ def move_order(id, price, quantity=0, moveflag=0):
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_limits_tplus(client, securities):
-    """
-    Получить лимиты Т+.
+# def get_limits_tplus(client, securities):
+#     """
+#     Получить лимиты Т+.
+#
+#     :param client:
+#         Идентификатор клиента.
+#     :param securities:
+#         Список пар (market, seccode) на которые нужны лимиты.
+#     :return:
+#         Результат отправки команды.
+#     """
+#     root = et.Element(
+#         "command", {"id": "get_max_buy_sell_tplus", "client": client})
+#     for (market, code) in securities:
+#         sec = et.Element("security")
+#         sec.append(__elem("market", str(market)))
+#         sec.append(__elem("seccode", code))
+#         root.append(sec)
+#     return __send_command(et.tostring(root, encoding="utf-8"))
 
-    :param client:
-        Идентификатор клиента.
-    :param securities:
-        Список пар (market, seccode) на которые нужны лимиты.
-    :return:
-        Результат отправки команды.
+
+# def get_portfolio_mct(client):
+#     """
+#     Получить портфель МСТ/ММА. Не реализован пока.
+#
+#     :param client:
+#         Идентификатор клиента.
+#     :return:
+#         Результат отправки команды.
+#     """
+#     return NotImplemented
+
+
+# def get_united_portfolio(client, union=None):
+#     """
+#     Получить единый портфель.
+#     В команде необходимо задать только один из параметров (client или union).
+#
+#     :param client:
+#         Идентификатор клиента.
+#     :param union:
+#         Идентификатор юниона.
+#     :return:
+#         Результат отправки команды.
+#     """
+#     params = {"id": "get_united_portfolio"}
+#     if client is not None:
+#         params["client"] = client
+#     elif union is not None:
+#         params["union"] = union
+#     else:
+#         raise ValueError("please specify client OR union")
+#     root = et.Element("command", params)
+#     return __send_command(et.tostring(root, encoding="utf-8"))
+
+
+def get_united_equity(union) -> CmdResult:
     """
-    root = et.Element(
-        "command", {"id": "get_max_buy_sell_tplus", "client": client})
-    for (market, code) in securities:
-        sec = et.Element("security")
-        sec.append(__elem("market", str(market)))
-        sec.append(__elem("seccode", code))
-        root.append(sec)
+    Получить актуальную оценку ликвидационной стоимости Единого портфеля,
+    соответствующего юниону.
+    """
+    root = et.Element("command", {"id": "get_united_equity",
+                                  "union": union})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_portfolio_mct(client):
+def get_united_collateral(union) -> CmdResult:
     """
-    Получить портфель МСТ/ММА. Не реализован пока.
-
-    :param client:
-        Идентификатор клиента.
-    :return:
-        Результат отправки команды.
+    Получить размер средств, заблокированных биржей (FORTS) под срочные
+    позиции клиентов юниона
     """
-    return NotImplemented
+    root = et.Element("command", {"id": "get_united_go",
+                                  "union": union})
+    return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_united_portfolio(client, union=None):
+def get_mc_portfolio(client, union=None) -> CmdResult:
     """
-    Получить единый портфель.
+    Получить мультивалютный портфель.
     В команде необходимо задать только один из параметров (client или union).
 
     :param client:
@@ -570,7 +610,7 @@ def get_united_portfolio(client, union=None):
     :return:
         Результат отправки команды.
     """
-    params = {"id": "get_united_portfolio"}
+    params = {"id": "get_mc_portfolio"}
     if client is not None:
         params["client"] = client
     elif union is not None:
