@@ -251,7 +251,8 @@ def unsubscribe_bidasks(board, tickers) -> CmdResult:
 
 
 def new_order(board, ticker, client, buysell, quantity, price=0,
-              bymarket=True, usecredit=True) -> CmdResult:
+              union=None, bymarket=True, usecredit=True,
+              unfilled='PutInQueue', nosplit=False) -> CmdResult:
     # Add hidden, unfilled, nosplit
     root = et.Element("command", {"id": "neworder"})
     sec = et.Element("security")
@@ -259,19 +260,24 @@ def new_order(board, ticker, client, buysell, quantity, price=0,
     sec.append(__elem("seccode", ticker))
     root.append(sec)
     root.append(__elem("client", client))
+    if union:
+        root.append(__elem("union", union))
     root.append(__elem("buysell", buysell.upper()))
     root.append(__elem("quantity", str(quantity)))
+    root.append(__elem("unfilled", unfilled))
     if not bymarket:
         root.append(__elem("price", str(price)))
     else:
         root.append(et.Element("bymarket"))
     if usecredit:
         root.append(et.Element("usecredit"))
+    if nosplit:
+        root.append(et.Element("nosplit"))
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
 def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
-                 price=0, bymarket=True, usecredit=True,
+                 price=0, union=None, bymarket=True, usecredit=True,
                  linked_order=None, valid_for=None) -> CmdResult:
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
@@ -279,6 +285,8 @@ def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
     sec.append(__elem("seccode", ticker))
     root.append(sec)
     root.append(__elem("client", client))
+    if union:
+        root.append(__elem("union", union))
     root.append(__elem("buysell", buysell.upper()))
     if linked_order:
         root.append(__elem("linkedorderno", str(linked_order)))
@@ -300,7 +308,7 @@ def new_stoploss(board, ticker, client, buysell, quantity, trigger_price,
 
 
 def new_takeprofit(board, ticker, client, buysell, quantity, trigger_price,
-                   correction=0, use_credit=True, linked_order=None,
+                   correction=0, union=None, use_credit=True, linked_order=None,
                    valid_for=None) -> CmdResult:
     root = et.Element("command", {"id": "newstoporder"})
     sec = et.Element("security")
@@ -308,6 +316,8 @@ def new_takeprofit(board, ticker, client, buysell, quantity, trigger_price,
     sec.append(__elem("seccode", ticker))
     root.append(sec)
     root.append(__elem("client", client))
+    if union:
+        root.append(__elem("union", union))
     root.append(__elem("buysell", buysell.upper()))
     if linked_order:
         root.append(__elem("linkedorderno", str(linked_order)))
@@ -419,7 +429,7 @@ def new_condorder(board, ticker, client, buysell, quantity, price,
     return NotImplemented
 
 
-def get_forts_position(client) -> CmdResult:
+def get_forts_positions(client) -> CmdResult:
     """
     Запрос позиций клиента по FORTS.
 
@@ -429,11 +439,11 @@ def get_forts_position(client) -> CmdResult:
         Результат отправки команды.
     """
     root = et.Element(
-        "command", {"id": "get_forts_position", "client": client})
+        "command", {"id": "get_forts_positions", "client": client})
     return __send_command(et.tostring(root, encoding="utf-8"))
 
 
-def get_limits_forts(client) -> CmdResult:
+def get_client_limits(client) -> CmdResult:
     """
     Запрос лимитов клиента ФОРТС.
 
