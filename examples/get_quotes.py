@@ -16,36 +16,46 @@ def custom_callback(obj):
     # в этом примере не обрабатываем большинство сообщений,
     # выдаваемых при инициализации
     if isinstance(obj, ss.SecurityPacket):
+        print(f"SecurityPacket", [security.seccode for security in obj.items])
         pass
     elif isinstance(obj, ss.SecurityPitPacket):
+        print(f"SecurityPitPacket", [pit.seccode for pit in obj.items])
         pass
     elif isinstance(obj, ss.SecInfoUpdate):
+        print(f"SecInfoUpdate({obj.market}, {obj.seccode})")
         pass
     elif isinstance(obj, ss.BoardPacket):
+        print("BoardPacket", [board.name for board in obj.items])
         pass
     elif isinstance(obj, ss.MarketPacket):
+        print(f"MarketPacket({obj.items})")
         pass
     elif isinstance(obj, ss.CandleKindPacket):
+        print("CandleKindPacket", [kind.name for kind in obj.items])
         pass
     elif isinstance(obj, ss.ClientTradePacket):
+        print("ClientTradePacket", [trade.seccode for trade in obj.items])
         pass
     elif isinstance(obj, ss.ClientAccount):
+        print(f"ClientAccount({obj.type}, {obj.currency}, {obj.market}")
         pass
     elif isinstance(obj, ss.CreditAbility):
+        print(f"CreditAbility({obj.overnight}, {obj.intraday})")
         pass
     elif isinstance(obj, ss.ServerStatus):
         print(f"SERVER STATUS CONNECTED: {obj.connected}")
     elif isinstance(obj, ss.HistoryCandlePacket):
+        print(list(i for i in obj.items))
         print(f"board: {obj.board}, seccode: {obj.seccode},\
                 period: {obj.period}")
         ticks = []
         for i in obj.items:
-            ticks.append([i.date, i.open, i.high, i.low, i.close])
+            ticks.append([i.date, i.open, i.high, i.low, i.close, i.volume])
         print(tabulate(ticks,
-                       headers=['date', 'open', 'high', 'low', 'close']))
+                       headers=['date', 'open', 'high', 'low', 'close', 'volume']))
     else:
         # а все остальное на всякий случай печатаем
-        print(f"CALLBACK {type(obj)}>\n{obj}")
+        print(f"CALLBACK {type(obj)}>\n{obj.__dict__}")
 
 
 if __name__ == '__main__':
@@ -57,7 +67,7 @@ if __name__ == '__main__':
         # Тут должна быть асинхронная логика,
         # но для примера просто ждем ответ сервера
         # Если не успевает произойти соединение - увеличьте время
-        time.sleep(20)
+        time.sleep(30)
         cmd.get_history('TQBR', 'GAZP', 2, count=10)
         # Тут должна быть асинхронная логика,
         # но для примера просто ждем ответ сервера
