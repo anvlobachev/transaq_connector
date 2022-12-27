@@ -17,7 +17,7 @@ import platform
 
 import lxml.etree as et
 
-from .structures import *
+from structures import *
 
 log = logging.getLogger("transaq.connector")
 
