@@ -8,8 +8,8 @@ import setuptools
 
 assert(platform.system() == 'Windows')
 
-dll = 'x64/txmlconnector64.dll' if platform.machine() == 'AMD64' \
-    else 'win32/txmlconnector.dll'
+dll = 'dll/txmlconnector64.dll' if platform.machine() == 'AMD64' \
+    else 'dll/txmlconnector.dll'
 if not os.path.exists(dll):
     warn("Transaq Connector DLL not found, downloading from Finam")
     zip = "TXmlConnector.zip"

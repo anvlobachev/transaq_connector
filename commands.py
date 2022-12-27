@@ -29,9 +29,9 @@ encoding = sys.stdout.encoding
 
 def load_dll():
     dll_file = os.path.join(os.path.dirname(__file__),
-                            "x64/txmlconnector64.dll"
+                            "dll/txmlconnector64.dll"
                             if platform.machine() == 'AMD64'
-                            else 'win32/txmlconnector.dll')
+                            else 'dll/txmlconnector.dll')
     dll = ctypes.WinDLL(dll_file)
 
     dll.GetServiceInfo.argtypes = (ctypes.c_char_p, ctypes.c_char_p)
