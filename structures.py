@@ -139,6 +139,7 @@ class TimeDiffResult(MyXmlObject):
     success = SimpleBooleanField('@success', 'true', 'false')
     diff = IntegerField('@diff')
 
+
 # Классы xml структур Транзака
 
 class HistoryCandle(Entity):
@@ -169,6 +170,10 @@ class HistoryCandlePacket(Packet):
     # Тикер бумаги (постоянный)
     seccode = StringField('@seccode')
     # Параметр "status" показывает, осталась ли еще история
+    # 0 - данных больше нет (дочерпали до дна)
+    # 1 - заказанное количество выдано (если надо еще - делать еще запрос)
+    # 2 - продолжение следует (будет еще порция)
+    # 3 - требуемые данные недоступны (есть смысл попробовать запросить позже).s
     status = IntegerField('@status')
     period = IntegerField('@period')
     items = NodeListField('candle', HistoryCandle)
@@ -253,6 +258,7 @@ class Market(Entity):
     Названия рынков: ММВБ, ФОРТС...
     """
     ROOT_NAME = 'market'
+    id = IntegerField('@id')
     name = StringField('text()')
 
 
@@ -291,8 +297,31 @@ class Security(Entity):
     active = SimpleBooleanField('@active', 'true', 'false')
     # Код инструмента
     seccode = StringField('seccode')
+    # Символ категории (класса) инструмента
+    instrclass = StringField('instrclass')
     # Тип бумаги
-    sectype = StringField('sectype')
+    # В качестве sectype могут встречаться следующие поля:
+    # Торгуемые инструменты:
+    #   SHARE - акции
+    #   BOND - облигации корпоративные
+    #   FUT - фьючерсы FORTS
+    #   OPT - опционы
+    #   GKO - гос. бумаги
+    #   FOB - фьючерсы ММВБ
+    # Неторгуемые (все кроме IDX приходят только с зарубежных площадок):
+    #   IDX - индексы
+    #   QUOTES - котировки (прочие)
+    #   CURRENCY - валютные пары
+    #   ADR - АДР
+    #   NYSE - данные с NYSE
+    #   METAL - металлы
+    #   OIL – нефтяной сектор
+    # Также:
+    #   ERROR - в случае внутренней ошибки (не должно появляться)
+    sectype = StringField('sectype', choices=('SHARE', 'BOND', 'FUT', 'OPT', 'GKO',
+                                              'FOB', 'IDX', 'QUOTES', 'CURRENCY',
+                                              'ADR', 'NYSE', 'METAL', 'OIL',
+                                              'ERROR'))
     # Идентификатор режима торгов по умолчанию
     board = StringField('board')
     # Идентификатор рынка
@@ -311,6 +340,14 @@ class Security(Entity):
     point_cost = FloatField('point_cost')
     # Имя таймзоны инструмента
     timezone = StringField('sec_tz')
+    # 0 - без стакана; 1 - стакан типа OrderBook; 2 - стакан типа Level2
+    quotestype = IntegerField('quotestype')
+    # код биржи листинга по стандарту ISO
+    mic = StringField('MIC')
+    # валюта номинала инструмента
+    currency = StringField('currency')
+    # валюта расчетов режима торгов по умолчанию
+    currency_id = StringField('currencyid')
     # Флаги фичей
     credit_allowed = SimpleBooleanField('opmask/@usecredit', 'yes', 'no')
     bymarket_allowed = SimpleBooleanField('opmask/@bymarket', 'yes', 'no')
@@ -318,6 +355,8 @@ class Security(Entity):
     immediate_allowed = SimpleBooleanField('opmask/@immorcancel', 'yes', 'no')
     cancelbalance_allowed = SimpleBooleanField(
         'opmask/@cancelbalance', 'yes', 'no')
+    fok = SimpleBooleanField('opmask/@fok', 'yes', 'no')
+    ioc = SimpleBooleanField('opmask/@ioc', 'yes', 'no')
 
 
 class SecurityPacket(Packet):
@@ -372,8 +411,20 @@ class SecInfo(Entity):
     put_call = StringField('put_call', choices=('C', 'P'))
     # Маржинальный(M)/премия(P)
     opt_type = StringField('opt_type', choices=('M', 'P'))
+    # Базовое ГО под покупку маржируемого опциона
+    bgo_buy = FloatField('bgo_buy')
     # Количество базового актива (FORTS)
     lot_volume = IntegerField('lot_volume')
+    # Международный идентификационный код инструмента
+    isin = StringField('isin')
+    # Номер государственной регистрации инструмента
+    reg_number = StringField('regnumber')
+    # Цена досрочного выкупа облигации
+    buyback_price = FloatField('buybackprice')
+    # Дата досрочного выкупа облигации
+    buyback_date = DateTimeField('buybackdate', TIME_FORMAT)
+    # Валюта расчетов
+    currency_id = StringField('currencyid')
 
 
 class SecInfoUpdate(Entity):
@@ -489,6 +540,10 @@ class Quotation(Entity):
     volatility = FloatField('volatility')
     # Теоретическая цена
     theory_price = FloatField('theoreticalprice')
+    # Базовое ГО под покупку маржируемого опциона
+    bgo_buy = FloatField('bgo_buy')
+    # Официальная текущая цена Биржи
+    l_current_price = FloatField('lcurrentprice')
 
 
 class QuotationPacket(Packet):
@@ -519,6 +574,7 @@ class Trade(Entity):
     quantity = IntegerField('quantity')
     # Покупка (B) / Продажа (S)
     buysell = StringField('buysell', choices=('B', 'S'))
+    # кол-во открытых позиций на срочном рынке
     open_interest = IntegerField('openinterest')
     # Период торгов (O - открытие, N - торги, С - закрытие)
     trade_period = StringField('period', choices=(
@@ -583,6 +639,8 @@ class BaseOrder(Entity):
     time = DateTimeField('time', TIME_FORMAT)
     # Идентификатор клиента
     client = StringField('client')
+    # Код юниона
+    union = StringField('union')
     # Cтатус заявки
     status = StringField('status')
     # Покупка (B) / Продажа (S)
@@ -651,7 +709,7 @@ class StopOrder(BaseOrder):
 
 
 class StopLoss(StopOrder):
-    """Стоп лосс оредер"""
+    """Стоп лосс ордер"""
     # Использование кредита
     use_credit = SimpleBooleanField('stoploss/@usecredit', 'yes', 'no')
     # Цена активации
@@ -739,6 +797,8 @@ class ClientTrade(Entity):
     seccode = StringField('seccode')
     # Идентификатор клиента
     client = StringField('client')
+    # Код юниона
+    union = StringField('union')
     # B - покупка, S - продажа
     buysell = StringField('buysell', choices=('B', 'S'))
     # Время сделки
@@ -765,6 +825,10 @@ class ClientTrade(Entity):
     settle_code = StringField('settlecode')
     # Текущая позиция по инструменту
     current_position = IntegerField('currentpos')
+    # Признак внебиржевой сделки, 1 или поле отсутсвует
+    bypass = IntegerField('bypass')
+    # Площадка (execution place)
+    venue = StringField('venue')
 
 
 class ClientTradePacket(Packet):
@@ -917,7 +981,7 @@ class SpotLimits(FortsClientPosition):
 
 
 class UnitedLimitsUpdate(Entity):
-    '''Оценка портфеля'''
+    """Оценка портфеля"""
     ROOT_NAME = "united_limits"
     # Код портфеля
     id = union = StringField("@union")
