@@ -1329,7 +1329,7 @@ class TextMessage(Entity):
     """
     ROOT_NAME = 'message'
     # Дата
-    id = date = DateTimeField('date', TIME_FORMAT)
+    id = date = StringField('date')
     # Срочность
     urgent = SimpleBooleanField('urgent', 'Y', 'N')
     # Отправитель
