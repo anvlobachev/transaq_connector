@@ -189,6 +189,8 @@ class ServerStatus(Entity):
     # Атрибут recover – необязательный параметр. Его наличие означает, что
     # коннектор пытается восстановить потерянное соединение с сервером
     recover = SimpleBooleanField('@recover', 'true', None)
+    sys_ver = IntegerField('@sys_ver')
+    build = IntegerField('@build')
     text = StringField('text()')
 
     def __repr__(self):
@@ -1327,7 +1329,7 @@ class TextMessage(Entity):
     """
     ROOT_NAME = 'message'
     # Дата
-    id = date = DateTimeField('date', TIME_FORMAT)
+    id = date = StringField('date')
     # Срочность
     urgent = SimpleBooleanField('urgent', 'Y', 'N')
     # Отправитель
