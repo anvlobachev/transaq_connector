@@ -26,7 +26,7 @@ class TestClientOrders(ut.TestCase):
         obj = self.obj.items[0]
         self.assertIsInstance(obj, Order)
         self.assertEqual(obj.id, 4581)
-        self.assertEqual(obj.order_no, 2693279377)
+        self.assertEqual(str(obj.order_no), '2693279377')
         self.assertEqual(obj.secid, 21)
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.seccode, 'MTSI')
@@ -53,7 +53,7 @@ class TestClientOrders(ut.TestCase):
         obj = self.obj.items[1]
         self.assertIsInstance(obj, Order)
         self.assertEqual(obj.id, 4531)
-        self.assertEqual(obj.order_no, 2693271069)
+        self.assertEqual(str(obj.order_no), '2693271069')
         self.assertEqual(obj.secid, 21)
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.seccode, 'MTSI')
@@ -80,7 +80,7 @@ class TestClientOrders(ut.TestCase):
         obj = self.obj.items[2]
         self.assertIsInstance(obj, TakeProfit)
         self.assertEqual(obj.id, 4571)
-        self.assertEqual(obj.order_no, 2693279377)
+        self.assertEqual(str(obj.order_no), '2693279377')
         self.assertEqual(obj.secid, 21)
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.seccode, 'MTSI')
@@ -88,7 +88,7 @@ class TestClientOrders(ut.TestCase):
         self.assertEqual(obj.status, 'tp_executed')
         self.assertEqual(obj.buysell, 'B')
         self.assertEqual(obj.canceller, '00000282166')
-        self.assertEqual(obj.alltrade_no, 2693113024)
+        self.assertEqual(str(obj.alltrade_no), '2693113024')
         self.assertEqual(obj.author, '00000282166')
         self.assertEqual(obj.valid_before, dt(2015, 8, 10, 16, 30))
         self.assertEqual(obj.accept_time, dt(2015, 8, 10, 16, 11, 26))
@@ -132,8 +132,8 @@ class TestClientTrades(ut.TestCase):
         obj = self.obj.items[0]
         self.assertIsInstance(obj, ClientTrade)
         self.assertEqual(obj.secid, 21)
-        self.assertEqual(obj.id, 2693113027)
-        self.assertEqual(obj.order_no, 2693279377)
+        self.assertEqual(str(obj.id), '2693113027')
+        self.assertEqual(str(obj.order_no), '2693279377')
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.seccode, 'MTSI')
         self.assertEqual(obj.client, 'test/C282166')
@@ -154,8 +154,8 @@ class TestClientTrades(ut.TestCase):
         obj = self.obj.items[1]
         self.assertIsInstance(obj, ClientTrade)
         self.assertEqual(obj.secid, 21)
-        self.assertEqual(obj.id, 2692109248)
-        self.assertEqual(obj.order_no, 2692232421)
+        self.assertEqual(str(obj.id), '2692109248')
+        self.assertEqual(str(obj.order_no), '2692232421')
         self.assertEqual(obj.board, 'TQBR')
         self.assertEqual(obj.seccode, 'MTSI')
         self.assertEqual(obj.client, 'test/C282166')
@@ -483,7 +483,7 @@ class TestSubscribedTicks(ut.TestCase):
 
     def test_tik1(self):
         obj = self.obj.items[1]
-        self.assertEqual(obj.id, 2691161113)
+        self.assertEqual(str(obj.id), '2691161113')
         self.assertEqual(obj.secid, 14)
         self.assertEqual(obj.seccode, 'SBER03')
         self.assertEqual(obj.board, 'TQBR')
