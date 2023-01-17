@@ -415,6 +415,8 @@ class SecInfo(Entity):
     opt_type = StringField('opt_type', choices=('M', 'P'))
     # Базовое ГО под покупку маржируемого опциона
     bgo_buy = FloatField('bgo_buy')
+    # Стоимость пункта цены
+    point_cost = FloatField('point_cost')
     # Количество базового актива (FORTS)
     lot_volume = IntegerField('lot_volume')
     # Международный идентификационный код инструмента
