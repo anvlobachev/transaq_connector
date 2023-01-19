@@ -415,6 +415,8 @@ class SecInfo(Entity):
     opt_type = StringField('opt_type', choices=('M', 'P'))
     # Базовое ГО под покупку маржируемого опциона
     bgo_buy = FloatField('bgo_buy')
+    # Стоимость пункта цены
+    point_cost = FloatField('point_cost')
     # Количество базового актива (FORTS)
     lot_volume = IntegerField('lot_volume')
     # Международный идентификационный код инструмента
@@ -567,7 +569,7 @@ class Trade(Entity):
     # Код инструмента
     seccode = StringField('seccode')
     # Биржевой номер сделки
-    id = trade_no = IntegerField('tradeno')
+    id = trade_no = StringField('tradeno')
     # Время сделки
     time = DateTimeField('time', TIME_FORMAT)
     # Цена сделки
@@ -628,7 +630,7 @@ class BaseOrder(Entity):
     # идентификатор транзакции сервера Transaq
     id = IntegerField('@transactionid')
     # Биржевой номер заявки
-    order_no = IntegerField('orderno')
+    order_no = StringField('orderno')
     # идентификатор бумаги
     secid = IntegerField('secid')
     # Идентификатор борда
@@ -668,7 +670,7 @@ class Order(BaseOrder):
     """Базовый класс ордера"""
     ROOT_NAME = 'order'
     # Биржевой номер заявки
-    origin_order_no = IntegerField('origin_orderno')
+    origin_order_no = StringField('origin_orderno')
     # Объем заявки в валюте инструмента
     value = FloatField('value')
     # НКД
@@ -696,16 +698,16 @@ class StopOrder(BaseOrder):
     ROOT_NAME = 'stoporder'
     # номер заявки Биржевой регистрационный номер заявки,
     # выставленной на рынок в результате исполнения cтопа
-    order_no = IntegerField('activeorderno')
+    order_no = StringField('activeorderno')
     # Идентификатор трейдера, который отменил стоп
     canceller = StringField('canceller')
     # Биржевой  регистрационный  номер  сделки,
     # явившейся основанием для перехода стопа в текущее состояние
-    alltrade_no = IntegerField('alltradeno')
+    alltrade_no = StringField('alltradeno')
     # Афтар заявки
     author = StringField('author')
     # Привязка к стандартной заявке
-    linked_order_no = IntegerField('linkedorderno')
+    linked_order_no = StringField('linkedorderno')
     # У стопов почему то нет времени активации
     time = None
 
@@ -790,9 +792,9 @@ class ClientTrade(Entity):
     # Id бумаги
     secid = IntegerField('secid')
     # Номер сделки на бирже
-    id = trade_no = IntegerField('tradeno')
+    id = trade_no = StringField('tradeno')
     # Номер заявки на бирже
-    order_no = IntegerField('orderno')
+    order_no = StringField('orderno')
     # Идентификатор борда
     board = StringField('board')
     # Код инструмента

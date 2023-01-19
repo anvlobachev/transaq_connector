@@ -28,20 +28,24 @@ class TransaqConnection():
             ss.BoardPacket.__name__: self.on_board_packet,
             ss.CandleKindPacket.__name__: self.on_candle_kind_packet,
             ss.ClientAccount.__name__: self.on_client_account,
+            ss.ClientTradePacket.__name__: self.on_client_trade_packet,
             ss.CreditAbility.__name__: self.on_credit_ability,
             ss.ClientOrderPacket.__name__: self.on_client_order_packet,
             ss.HistoryCandlePacket.__name__: self.on_history_candle_packet,
             ss.HistoryTickPacket.__name__: self.on_history_tick_packet,
             ss.MarketPacket.__name__: self.on_market_packet,
+            ss.NewsHeader.__name__: self.on_news_header,
             ss.PositionPacket.__name__: self.on_position_packet,
             ss.QuotationPacket.__name__: self.on_quotation_packet,
             ss.QuotePacket.__name__: self.on_quote_packet,
             ss.SecurityPacket.__name__: self.on_security_packet,
             ss.SecurityPitPacket.__name__: self.on_security_pit_packet,
+            ss.SecInfo.__name__: self.on_sec_info,
             ss.SecInfoUpdate.__name__: self.on_sec_info_update,
             ss.ServerStatus.__name__: self.on_server_status,
             ss.TextMessagePacket.__name__: self.on_text_message_packet,
             ss.TradePacket.__name__: self.on_trade_packet,
+            ss.Union.__name__: self.on_union,
         }
 
         cmd.initialize(logdir, loglevel, self.__msg_handler)
@@ -104,6 +108,9 @@ class TransaqConnection():
     async def on_client_order_packet(self, packet: ss.ClientOrderPacket):
         ...
 
+    async def on_client_trade_packet(self, packet: ss.ClientTradePacket):
+        ...
+
     async def on_history_candle_packet(self, packet: ss.HistoryCandlePacket):
         ...
 
@@ -111,6 +118,9 @@ class TransaqConnection():
         ...
 
     async def on_market_packet(self, packet: ss.MarketPacket):
+        ...
+
+    async def on_news_header(self, packet: ss.NewsHeader):
         ...
 
     async def on_position_packet(self, packet: ss.PositionPacket):
@@ -128,6 +138,9 @@ class TransaqConnection():
     async def on_security_pit_packet(self, packet: ss.SecurityPitPacket):
         ...
 
+    async def on_sec_info(self, packet: ss.SecInfo):
+        ...
+
     async def on_sec_info_update(self, packet: ss.SecInfoUpdate):
         ...
 
@@ -142,8 +155,12 @@ class TransaqConnection():
     async def on_trade_packet(self, packet: ss.TradePacket):
         ...
 
+    async def on_union(self, packet: ss.Union):
+        ...
+
     async def on_unknown_packet(self, packet):
         """
         Функция обработки сообщений, не предусмотренных документацией.
         """
+        print(f"on_unknown_packet: {packet.__class__}")
         print(packet)
