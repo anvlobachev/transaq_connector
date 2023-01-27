@@ -169,6 +169,8 @@ def connect(login, password, server, min_delay=100,
         root.append(__elem("push_u_limits", str(push_u_limits)))
     if push_p_equity > 0:
         root.append(__elem("push_pos_equity", str(push_p_equity)))
+    # чтобы время в различных XML-структурах приходило с миллисекундами
+    root.append(__elem("milliseconds", "true"))
     cmd = et.tostring(root, encoding="utf-8")
     return __send_command(cmd)
 
@@ -201,15 +203,15 @@ def get_time_difference() -> TimeDiffResult:
 
 
 def subscribe_ticks(tickers) -> CmdResult:
+    """
+        tickers - список из dict'ов типа {'board':..., 'seccode':..., 'tradeno':...}
+    """
     root = et.Element("command", {"id": 'subscribe_ticks'})
     for t in tickers:
         item = et.Element('security')
-        item.append(__elem("board", t[0]))
-        item.append(__elem("seccode", t[1]))
-        no = tickers.get(t)
-        if no is None:
-            no = 0
-        item.append(__elem("tradeno", str(no)))
+        item.append(__elem("board", t['board']))
+        item.append(__elem("seccode", t['seccode']))
+        item.append(__elem("tradeno", str(t.get('tradeno', 0))))
         root.append(item)
         root.append(__elem("filter", "false"))
     return __send_command(et.tostring(root, encoding="utf-8"))

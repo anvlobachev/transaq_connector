@@ -7,7 +7,7 @@
         <client>test/C282166</client>
         <status>matched</status>
         <buysell>B</buysell>
-        <time>10.08.2015 16:11:30</time>
+        <time>10.08.2015 16:11:30.000</time>
         <brokerref></brokerref>
         <value>7539.3</value>
         <accruedint>0.0</accruedint>
@@ -30,7 +30,7 @@
         <client>test/C282166</client>
         <status>active</status>
         <buysell>S</buysell>
-        <time>10.08.2015 16:05:20</time>
+        <time>10.08.2015 16:05:20.000</time>
         <brokerref></brokerref>
         <value>7264.5</value>
         <accruedint>0.0</accruedint>
@@ -54,9 +54,9 @@
         <buysell>B</buysell>
         <canceller>00000282166</canceller>
         <alltradeno>2693113024</alltradeno>
-        <validbefore>10.08.2015 16:30:00</validbefore>
+        <validbefore>10.08.2015 16:30:00.000</validbefore>
         <author>00000282166</author>
-        <accepttime>10.08.2015 16:11:26</accepttime>
+        <accepttime>10.08.2015 16:11:26.000</accepttime>
         <status>tp_executed</status>
         <takeprofit>
             <activationprice>242.0</activationprice>
@@ -75,9 +75,9 @@
         <client>test/C282166</client>
         <buysell>B</buysell>
         <canceller>00000282166</canceller>
-        <validbefore>10.08.2015 16:30:00</validbefore>
+        <validbefore>10.08.2015 16:30:00.000</validbefore>
         <author>00000282166</author>
-        <accepttime>10.08.2015 16:11:26</accepttime>
+        <accepttime>10.08.2015 16:11:26.000</accepttime>
         <status>watching</status>
         <stoploss usecredit="yes">
             <activationprice>243.0</activationprice>

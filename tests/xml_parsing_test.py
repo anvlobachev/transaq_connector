@@ -357,7 +357,7 @@ class TestDateTimeMapper(ut.TestCase):
 
     def test_norm(self):
         self.assertEqual(self.mapper.to_python(
-            '11.08.2015 23:08:00'), dt(2015, 8, 11, 23, 8))
+            '11.08.2015 23:08:00.000'), dt(2015, 8, 11, 23, 8))
 
 
 class TestGlobalParse(ut.TestCase):

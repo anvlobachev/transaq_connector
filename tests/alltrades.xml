@@ -2,7 +2,7 @@
     <trade secid="14">
         <tradeno>2691161107</tradeno>
         <board>TQBR</board>
-        <time>08.08.2015 23:06:34</time>
+        <time>08.08.2015 23:06:34.000</time>
         <price>102.5</price>
         <quantity>6</quantity>
         <buysell>B</buysell>
@@ -12,7 +12,7 @@
     <trade secid="14">
         <tradeno>2691161113</tradeno>
         <board>TQBR</board>
-        <time>08.08.2015 23:06:36</time>
+        <time>08.08.2015 23:06:36.000</time>
         <price>102.5</price>
         <quantity>118</quantity>
         <buysell>B</buysell>
@@ -22,7 +22,7 @@
     <trade secid="21">
         <tradeno>2691161114</tradeno>
         <board>TQBR</board>
-        <time>08.08.2015 23:06:36</time>
+        <time>08.08.2015 23:06:36.000</time>
         <price>237.42</price>
         <quantity>1</quantity>
         <buysell>S</buysell>

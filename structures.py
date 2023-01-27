@@ -17,7 +17,7 @@ from eulxml.xmlmap.fields import Field, DateTimeMapper
 LOG = logging.getLogger("transaq.connector")
 
 # Формат дат/времени используемый Транзаком
-TIME_FORMAT = "%d.%m.%Y %H:%M:%S"
+TIME_FORMAT = "%d.%m.%Y %H:%M:%S.%f"
 # Список классов, ленивая инициализация при парсинге
 _MY_CLASSES = []
 
